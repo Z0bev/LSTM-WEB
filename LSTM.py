@@ -61,7 +61,7 @@ model.add(Dense(1))
 model.compile(optimizer='adam', loss='mse', metrics=['mse'])
 
 # train the model
-history = model.fit(trainX, trainY, epochs=10000, batch_size=100, shuffle=True, validation_data=(testX, testY), verbose=2)
+history = model.fit(trainX, trainY, epochs=2000, batch_size=100, shuffle=True, validation_data=(testX, testY), verbose=2)
 
 # plot the training and validation loss
 plt.plot(history.history['loss'], label='loss')
