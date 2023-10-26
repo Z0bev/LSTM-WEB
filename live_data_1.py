@@ -14,12 +14,12 @@ warnings.filterwarnings('ignore')
 ticker = "AAPL"
 
 # load the pre-trained model
-model = load_model(r'/Users/samuelzobev/Downloads/End of year project/trained_model.h10')
+model = load_model(r'C:\Users\zobev\Desktop\EYP\trained_model.h10')
 
 # create a loop to continuously retrieve live data and make predictions
 while True:
     # retrieve the live data from Yahoo Finance API
-    live_data = yf.download(ticker, period="1d", interval="1m")
+    live_data = yf.download(ticker, period="1y", interval="1d")
     live_data = live_data[['Open', 'High', 'Low', 'Close', 'Volume', 'Adj Close']]
 
     # calculate technical indicators
@@ -54,4 +54,4 @@ while True:
     print(unscaled_predictions)
 
     # wait for 1 minute before retrieving new data and making new predictions
-    time.sleep(20)
+    time.sleep(60)
