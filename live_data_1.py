@@ -37,7 +37,7 @@ while True:
     # remove nan values
     live_data.dropna(inplace=True)
 
-    print(live_data)
+    #print(live_data)
 
     # scale the data
     scaler = MinMaxScaler()
