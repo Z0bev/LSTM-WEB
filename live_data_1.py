@@ -11,7 +11,7 @@ import time
 ticker = "MSFT"
 
 # load the pre-trained model
-model = load_model('/Users/samuelzobev/Downloads/End of year project/trained_model.h8')
+model = load_model(r'C:\Users\zobev\Desktop\EYP\trained_model.h10')
 
 # create a loop to continuously retrieve live data and make predictions
 while True:
@@ -51,7 +51,7 @@ while True:
 
     # unscale the predicted values
     unscaled_predictions = scaler.inverse_transform(predictions_reshaped)
-
+    
     # print the unscaled predictions
     print(unscaled_predictions)
 
