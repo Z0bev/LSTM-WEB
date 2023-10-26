@@ -11,7 +11,7 @@ import time
 ticker = "MSFT"
 
 # load the pre-trained model
-model = load_model(r'C:\Users\zobev\Desktop\EYP\trained_model.h10')
+model = load_model(r'/Users/samuelzobev/Downloads/End of year project/trained_model.h10')
 
 # create a loop to continuously retrieve live data and make predictions
 while True:
@@ -47,15 +47,13 @@ while True:
         predictions = predictions[:-remainder, :]
 
     # reshape the predictions array to shape (n, 12)
-    predictions_reshaped = np.reshape(predictions, (-1, 12))
+    #predictions_reshaped = np.reshape(predictions, (-1, 12))
 
     # unscale the predicted values
-    unscaled_predictions = scaler.inverse_transform(predictions_reshaped)
+    #unscaled_predictions = scaler.inverse_transform(predictions_reshaped)
     
     # print the unscaled predictions
-    print(unscaled_predictions)
+    print(predictions)
 
     # wait for 1 minute before retrieving new data and making new predictions
     time.sleep(20)
-    
-    #test
