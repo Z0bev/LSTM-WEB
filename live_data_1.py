@@ -57,3 +57,5 @@ while True:
 
     # wait for 1 minute before retrieving new data and making new predictions
     time.sleep(20)
+    
+    #test
