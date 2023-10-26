@@ -14,7 +14,7 @@ warnings.filterwarnings('ignore')
 ticker = "AAPL"
 
 # load the pre-trained model
-model = load_model(r'C:\Users\zobev\Desktop\EYP\trained_model.h10')
+model = load_model(r'C:\Users\zobev\Desktop\EYP\trained_model.h12')
 
 # create a loop to continuously retrieve live data and make predictions
 while True:
@@ -49,9 +49,14 @@ while True:
     dummy_cols = np.zeros((predictions.shape[0], live_data.shape[1]-1))
     predictions = np.hstack((dummy_cols, predictions))
     unscaled_predictions = scaler.inverse_transform(predictions)[:, -1]
+    
+    # calculate the percentage change from the previous day
+    previous_day_close = live_data['Close'].values[-1]
+    percentage_change = ((unscaled_predictions - previous_day_close) / previous_day_close) * 100
 
     print(unscaled_predictions.shape)
-    print(unscaled_predictions)
+    print("Forecasted price: ", unscaled_predictions)
+    print("Percentage change: ", percentage_change, "%")
 
     # wait for 1 minute before retrieving new data and making new predictions
-    time.sleep(60)
+    time.sleep(3600)
