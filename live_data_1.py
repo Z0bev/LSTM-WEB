@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 import ta
-import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
 import time
@@ -11,51 +10,39 @@ import time
 ticker = "MSFT"
 
 # load the pre-trained model
-model = load_model(r'C:\Users\zobev\Desktop\EYP\trained_model.h10')
+model = load_model(r'/Users/samuelzobev/Downloads/End of year project/trained_model.h10')
 
 # create a loop to continuously retrieve live data and make predictions
 while True:
     # retrieve the live data from Yahoo Finance API
     live_data = yf.download(ticker, period="1d", interval="1m")
-    live_data = live_data[['Open', 'Close', 'High', 'Low', 'Volume', 'Adj Close']]
+    live_data = live_data[['Open', 'High', 'Low', 'Close', 'Volume', 'Adj Close']]
 
-    # add lagged features
-    lagged_data = live_data.shift(1)
-    lagged_data.columns = [f'{col}_lag1' for col in lagged_data.columns]
-    live_data = pd.concat([live_data, lagged_data], axis=1)
-    
-    # remove the lagged features from the original data
-    live_data = live_data.iloc[1:, :]
+    # calculate technical indicators
+    live_data['RSI'] = ta.momentum.RSIIndicator(live_data['Close'], window=14).rsi()
+    live_data['MA'] = ta.trend.SMAIndicator(live_data['Close'], window=20).sma_indicator()
+    live_data['EMA'] = ta.trend.EMAIndicator(live_data['Close'], window=20).ema_indicator()
+    bb = ta.volatility.BollingerBands(live_data['Close'], window=20, window_dev=2)
+    live_data['BB_upper'] = bb.bollinger_hband()
+    live_data['BB_middle'] = bb.bollinger_mavg()
+    live_data['BB_lower'] = bb.bollinger_lband()
 
-    # scale the input data
+    # remove nan values
+    live_data.dropna(inplace=True)
+
+    # scale the data
     scaler = MinMaxScaler()
-    scaled_data = scaler.fit_transform(live_data.values.reshape(live_data.shape[0], 12))
+    scaled_data = scaler.fit_transform(live_data.values)
 
-    # remove the last two rows of the scaled data to predict only 1 day ahead while looking at 2 days behind
-    scaled_data = scaled_data[:-2, :]
-    scaled_data = np.reshape(scaled_data, (scaled_data.shape[0], 2, 12))
+    # reshape the data to include time step
+    scaled_data = scaled_data[-2:, :]  # select the last 2 time steps
+    scaled_data = np.expand_dims(scaled_data, axis=0)
 
-    # make predictions on the last row of the input data
-    predictions = model.predict(scaled_data[-1:])
+    # make predictions on the last sequence of the input data
+    predictions = model.predict(scaled_data)
 
     print(predictions.shape)
-    
-    # assume that 'predictions' is the array with shape (n, 1)
-    n = predictions.shape[0]
-    remainder = n % 12
-    if remainder != 0:
-        predictions = predictions[:-remainder, :]
-
-    # reshape the predictions array to shape (n, 12)
-    predictions_reshaped = np.reshape(predictions, (-1, 12))
-
-    # unscale the predicted values
-    unscaled_predictions = scaler.inverse_transform(predictions_reshaped)
-    
-    # print the unscaled predictions
-    print(unscaled_predictions)
+    print(predictions)
 
     # wait for 1 minute before retrieving new data and making new predictions
-    time.sleep(20)
-    
-    #test
+    time.sleep(60)
