@@ -5,9 +5,13 @@ import ta
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
 import time
+import warnings
+
+# ignore warnings
+warnings.filterwarnings('ignore')
 
 # define the ticker symbol
-ticker = "MSFT"
+ticker = "AAPL"
 
 # load the pre-trained model
 model = load_model(r'/Users/samuelzobev/Downloads/End of year project/trained_model.h10')
@@ -41,8 +45,13 @@ while True:
     # make predictions on the last sequence of the input data
     predictions = model.predict(scaled_data)
 
-    print(predictions.shape)
-    print(predictions)
+    # unscale the predictions
+    dummy_cols = np.zeros((predictions.shape[0], live_data.shape[1]-1))
+    predictions = np.hstack((dummy_cols, predictions))
+    unscaled_predictions = scaler.inverse_transform(predictions)[:, -1]
+
+    print(unscaled_predictions.shape)
+    print(unscaled_predictions)
 
     # wait for 1 minute before retrieving new data and making new predictions
-    time.sleep(60)
+    time.sleep(20)
