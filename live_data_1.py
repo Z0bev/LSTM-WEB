@@ -6,6 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
 import time
 import warnings
+from datetime import datetime, timedelta
 
 # ignore warnings
 warnings.filterwarnings('ignore')
@@ -19,7 +20,9 @@ model = load_model(r'C:\Users\zobev\Desktop\EYP\trained_model.h12')
 # create a loop to continuously retrieve live data and make predictions
 while True:
     # retrieve the live data from Yahoo Finance API
-    live_data = yf.download(ticker, period="1y", interval="1d")
+    live_data = yf.download(ticker, period="1d", interval="1m")
+    #yesterday = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
+    #live_data = live_data.loc[:yesterday]
     live_data = live_data[['Open', 'High', 'Low', 'Close', 'Volume', 'Adj Close']]
 
     # calculate technical indicators
@@ -33,6 +36,8 @@ while True:
 
     # remove nan values
     live_data.dropna(inplace=True)
+
+    #print(live_data)
 
     # scale the data
     scaler = MinMaxScaler()
@@ -58,5 +63,5 @@ while True:
     print("Forecasted price: ", unscaled_predictions)
     print("Percentage change: ", percentage_change, "%")
 
-    # wait for 1 minute before retrieving new data and making new predictions
-    time.sleep(3600)
+    # wait for 1 hour before retrieving new data and making new predictions
+    time.sleep(60)
