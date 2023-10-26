@@ -13,7 +13,7 @@ def download_stock_data(tickers):
     
     for ticker in tickers:
         try:
-            data = yf.download(ticker,start="2020-7-21", end="2023-7-21", period="1d", interval="1d")
+            data = yf.download(ticker,start="2020-7-21", end="2023-7-21", period="1y", interval="1d")
             all_data[ticker] = data
             file_path = os.path.join(script_dir, f"{ticker}.csv")
             data.to_csv(file_path)
