@@ -83,7 +83,4 @@ plt.legend()
 plt.show()
 
 # save the model
-model.save('trained_model.h9')
-
-
-
+model.save('trained_model.h10')
