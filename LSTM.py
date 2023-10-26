@@ -92,12 +92,11 @@ dummy_cols_actual = np.zeros((testY.shape[0], train_data.shape[1]-1))
 actual = np.hstack((dummy_cols_actual, testY.reshape(-1, 1)))
 unscaled_actual = scaler.inverse_transform(actual)[:, -1]
 
-# plot the predicted and actual prices
+# plot the predicted and actual prices (unscaled)
 plt.plot(unscaled_predictions, label='predicted Close', color='red')
 plt.plot(unscaled_actual, label='actual Close', color='green')
 plt.legend()
 plt.show()
-
 
 # save the model
 model.save('trained_model.h11')
