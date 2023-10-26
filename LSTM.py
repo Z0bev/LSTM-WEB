@@ -82,5 +82,22 @@ plt.plot(testY, label='actual Close', color='green')
 plt.legend()
 plt.show()
 
+# create dummy columns for predictions
+dummy_cols_pred = np.zeros((predictions.shape[0], train_data.shape[1]-1))
+predictions = np.hstack((dummy_cols_pred, predictions))
+unscaled_predictions = scaler.inverse_transform(predictions)[:, -1]
+
+# create dummy columns for actual values
+dummy_cols_actual = np.zeros((testY.shape[0], train_data.shape[1]-1))
+actual = np.hstack((dummy_cols_actual, testY.reshape(-1, 1)))
+unscaled_actual = scaler.inverse_transform(actual)[:, -1]
+
+# plot the predicted and actual prices
+plt.plot(unscaled_predictions, label='predicted Close', color='red')
+plt.plot(unscaled_actual, label='actual Close', color='green')
+plt.legend()
+plt.show()
+
+
 # save the model
-model.save('trained_model.h10')
+model.save('trained_model.h11')
