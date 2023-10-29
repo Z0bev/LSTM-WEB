@@ -63,5 +63,5 @@ while True:
     print("Forecasted price: ", unscaled_predictions)
     print("Percentage change: ", percentage_change, "%")
 
-    # wait for 1 hour before retrieving new data and making new predictions
-    time.sleep(3600)
+    # wait for 1 min before retrieving new data and making new predictions
+    time.sleep(60)
