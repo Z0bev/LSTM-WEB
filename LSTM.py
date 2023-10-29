@@ -7,7 +7,7 @@ from sklearn.preprocessing import MinMaxScaler
 from keras.callbacks import History
 from keras.models import Model, Sequential
 from keras.layers import Dense, Dropout, LSTM, Activation
-
+from keras.optimizers import Adam
 
 # load the data
 data = pd.read_csv('MSFT.csv', date_parser=True)
