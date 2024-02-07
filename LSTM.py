@@ -8,9 +8,10 @@ from keras.callbacks import History
 from keras.models import Model, Sequential
 from keras.layers import Dense, Dropout, LSTM, Activation
 from keras.optimizers import Adam
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 # load the data
-data = pd.read_csv('MSFT.csv', date_parser=True)
+data = pd.read_csv('AAPL.csv', date_parser=True)
 data['RSI'] = ta.momentum.RSIIndicator(data['Close'], window=14).rsi()
 data['MA'] = ta.trend.SMAIndicator(data['Close'], window=20).sma_indicator()
 data['EMA'] = ta.trend.EMAIndicator(data['Close'], window=20).ema_indicator()
@@ -63,6 +64,7 @@ model.compile(optimizer='adam', loss='mse', metrics=['mse'])
 # train the model
 history = model.fit(trainX, trainY, epochs=2000, batch_size=100, shuffle=True, validation_data=(testX, testY), verbose=2)
 
+
 # plot the training and validation loss
 plt.plot(history.history['loss'], label='loss')
 plt.plot(history.history['val_loss'], label='val_loss')
@@ -76,11 +78,6 @@ for i in range(len(predictions)):
 
 print(predictions.shape)
 
-# plot the predicted and actual prices
-plt.plot(predictions, label='predicted Close', color='red')
-plt.plot(testY, label='actual Close', color='green')
-plt.legend()
-plt.show()
 
 # create dummy columns for predictions
 dummy_cols_pred = np.zeros((predictions.shape[0], train_data.shape[1]-1))
@@ -98,5 +95,20 @@ plt.plot(unscaled_actual, label='actual Close', color='green')
 plt.legend()
 plt.show()
 
+# calculate the mean squared error
+mse = mean_squared_error(unscaled_actual, unscaled_predictions)
+print(f'Mean Squared Error: {mse}')
+
+# calculate the mean absolute error
+mae = mean_absolute_error(unscaled_actual, unscaled_predictions)
+print(f'Mean Absolute Error: {mae}')
+
+# calculate the root mean squared error
+rmse = np.sqrt(mse)
+print(f'Root Mean Squared Error: {rmse}')
+
+#calculate the R2 score
+r2_score = 1 - (np.sum((unscaled_actual - unscaled_predictions)**2)/np.sum((unscaled_actual - np.mean(unscaled_actual))**2))
+
 # save the model
-model.save('trained_model.h13')
+model.save('trained_model.h14')
