@@ -25,8 +25,7 @@ model = load_model(r'trained_model.h12')
 
 # create a loop to continuously retrieve live data and make predictions
 def gldp(instrument, timeframe):
-    
-    instrument = input("Enter the ticker symbol: ")
+         
     # retrieve the live data from Yahoo Finance API
     live_data = yf.download(instrument, period='1y', interval='1d')
     live_data = live_data[['Open', 'High', 'Low', 'Close', 'Volume', 'Adj Close']]
@@ -58,23 +57,37 @@ def gldp(instrument, timeframe):
     
     signal = model.predict(scaled_data)
     
+    # Calculate the number of time steps based on the chosen timeframe
+    if timeframe == '1min':
+        num_steps = 1
+    elif timeframe == '1hour':
+            num_steps = 60
+    elif timeframe == '1day':
+        num_steps = 60 * 24
+    else:
+        raise ValueError("Invalid timeframe. Please choose from '1min', '1hour', or '1day'.")
+    
     # Make a prediction on the scaled data
     forecast = model.predict(scaled_data)
-
+        
     # Reshape the prediction to match the shape of the original data
     forecast = np.reshape(forecast, (-1, 1))
 
-    
     # Unscale the forecast using the separate scaler
     forecast_unscaled = close_scaler.inverse_transform(forecast)
+    
+    # Get the forecast for the desired time frame
+    forecast_timeframe = forecast_unscaled[-num_steps:]
         
     print("Current price: ", current_price)
-    print("Forecast: ", forecast_unscaled)
+    print(f"Forecast {timeframe} ahead: ", forecast_timeframe)
    
-    return current_price, forecast_unscaled
+    return current_price, forecast_timeframe
 
 
-gldp(instrument= 'any', timeframe= '1d')
+instrument = input("Enter the ticker symbol: ")
+timeframe = input("Enter the timeframe: ")
+gldp(instrument, timeframe)
 
     
 
