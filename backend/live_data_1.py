@@ -11,7 +11,7 @@ from sklearn.metrics import mean_absolute_percentage_error
 app = Flask(__name__, static_folder='/Users/samuelzobev/Downloads/End of year project/static', template_folder='/Users/samuelzobev/Downloads/End of year project/template')
 
 # load the pre-trained model
-model = load_model(r'trained_models/trained_model.h14')
+model = load_model(r'trained_models/trained_model.h16')
 
 @app.route('/')
 def home():
