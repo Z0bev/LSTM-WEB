@@ -62,7 +62,7 @@ def get_live_data_and_predict(instrument, timeframe):
     elif timeframe == '1week':
         forecast_steps = 5  
     elif timeframe == '1month':
-        forecast_steps = 22  
+        forecast_steps = 22
     else:
         raise ValueError("Invalid timeframe. Please choose from '1day', '1week', '1month'.")
     

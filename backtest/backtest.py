@@ -53,7 +53,7 @@ last_buy_price = 0
 # Loop over  data
 for i in range(len(signals)):
     # Get the current price
-    current_price = data['Close'].iloc[i]
+    current_price = data['Close'].iloc[i] 
 
     # Get the trading signal
     signal = signals[i]

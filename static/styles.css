@@ -21,7 +21,7 @@ header {
     padding: 1rem 0;
 }
 
-footer {
+footer { 
     background-color: var(--secondary-color);
     color: white;
     text-align: center;

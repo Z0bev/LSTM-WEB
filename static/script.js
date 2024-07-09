@@ -79,7 +79,7 @@ function createPlot(instrument, historicalPrices, prediction, timeframe) {
         type: 'scatter',
         mode: 'lines',
         name: 'Predicted Price',
-        line: {color: '#ff7f0e'}
+        line: {color: '#ff7f0e'} 
     };
 
     const layout = {
