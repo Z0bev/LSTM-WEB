@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equity Price Forecast</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <h1>Equity Forecast</h1>
+    </header>
+    <main>
+        <div class="container">
+            <form id="prediction-form">
+                <div class="form-group">
+                    <label for="instrument">Instrument:</label>
+                    <input type="text" id="instrument" name="instrument" required>
+                </div>
+                <div class="form-group">
+                    <label for="timeframe">Timeframe:</label>
+                    <select id="timeframe" name="timeframe">
+                        <option value="1day">1 Day Forecast</option>
+                        <option value="1week">1 Week Forecast</option>
+                        <option value="1month">1 Month Forecast</option>
+                    </select>
+                </div>
+                <button type="submit" class="animated-button">
+                    <i class="fas fa-chart-line"></i> Forecast
+                </button>
+            </form>
+            <div id="tickers-container"></div>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2024 Equity Price Forecast. All rights reserved.</p>
+    </footer>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="/static/script.js"></script>
+</body>
+</html>
