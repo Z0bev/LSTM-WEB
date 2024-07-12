@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, render_template
 from sklearn.metrics import mean_absolute_percentage_error
 
-app = Flask(__name__, static_folder='static', template_folder='template')
+app = Flask(__name__, static_folder=r'C:\Users\zobev\LSTM-WEB\static', template_folder=r'C:\Users\zobev\LSTM-WEB\template')
 
 # load the pre-trained model
 model = load_model(r'trained_models\trained_model.h17')

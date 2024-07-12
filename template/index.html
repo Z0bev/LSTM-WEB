@@ -12,25 +12,27 @@
         <h1>Equity Forecast</h1>
     </header>
     <main>
-        <div class="container">
-            <form id="prediction-form">
-                <div class="form-group">
-                    <label for="instrument">Instrument:</label>
-                    <input type="text" id="instrument" name="instrument" required>
-                </div>
-                <div class="form-group">
-                    <label for="timeframe">Timeframe:</label>
-                    <select id="timeframe" name="timeframe">
-                        <option value="1day">1 Day Forecast</option>
-                        <option value="1week">1 Week Forecast</option>
-                        <option value="1month">1 Month Forecast</option>
-                    </select>
-                </div>
-                <button type="submit" class="animated-button">
-                    <i class="fas fa-chart-line"></i> Forecast
-                </button>
-            </form>
-            <div id="tickers-container"></div>
+        <div class="content-wrapper">
+            <div class="container">
+                <form id="prediction-form">
+                    <div class="form-group">
+                        <label for="instrument">Instrument:</label>
+                        <input type="text" id="instrument" name="instrument" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="timeframe">Timeframe:</label>
+                        <select id="timeframe" name="timeframe">
+                            <option value="1day">1 Day Forecast</option>
+                            <option value="1week">1 Week Forecast</option>
+                            <option value="1month">1 Month Forecast</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="animated-button">
+                        <i class="fas fa-chart-line"></i> Forecast
+                    </button>
+                </form>
+                <div id="tickers-container"></div>
+            </div>
         </div>
     </main>
     <footer> 
