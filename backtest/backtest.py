@@ -6,10 +6,10 @@ from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
 
 # Load your trained LSTM model
-model = load_model('/Users/samuelzobev/Downloads/End of year project/trained_models/trained_model.h14')
+model = load_model(r'trained_models\trained_model.h17')
 
 # Load your historical data
-data = pd.read_csv('/Users/samuelzobev/Downloads/End of year project/data_collection/AMZN.csv', date_parser=True)
+data = pd.read_csv(r'data_collection\AMZN.csv', date_parser=True)
 data['RSI'] = ta.momentum.RSIIndicator(data['Close'], window=14).rsi()
 data['MA'] = ta.trend.SMAIndicator(data['Close'], window=20).sma_indicator()
 data['EMA'] = ta.trend.EMAIndicator(data['Close'], window=20).ema_indicator()
