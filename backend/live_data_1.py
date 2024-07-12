@@ -8,10 +8,10 @@ from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, render_template
 from sklearn.metrics import mean_absolute_percentage_error
 
-app = Flask(__name__, static_folder='/Users/samuelzobev/Downloads/End of year project/static', template_folder='/Users/samuelzobev/Downloads/End of year project/template')
+app = Flask(__name__, static_folder='static', template_folder='template')
 
 # load the pre-trained model
-model = load_model(r'trained_models/trained_model.h16')
+model = load_model(r'trained_models\trained_model.h17')
 
 @app.route('/')
 def home():
