@@ -57,14 +57,12 @@ def get_live_data_and_predict(instrument, timeframe):
     scaled_data = np.expand_dims(scaled_data, axis=0)
     
     # Make predictions based on timeframe
-    if timeframe == '1day':
-        forecast_steps = 1
-    elif timeframe == '1week':
+    if timeframe == '1week':
         forecast_steps = 5  
     elif timeframe == '1month':
         forecast_steps = 22
     else:
-        raise ValueError("Invalid timeframe. Please choose from '1day', '1week', '1month'.")
+        raise ValueError("Invalid timeframe. Please choose from '1week', '1month'.")
     
     forecasts = []
     for _ in range(forecast_steps):
