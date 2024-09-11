@@ -9,13 +9,13 @@ from keras.models import load_model
 from datetime import datetime, timedelta
 
 end_date = datetime.now()
-start_date = end_date - timedelta(days=30)
+start_date = end_date - timedelta(days=7)
 
 # Load your trained LSTM model
 model = load_model(r'trained_models\trained_model.h17')
 
 def load_data(symbol, start_date, end_date):
-    data = yf.download(symbol, start=start_date, end=end_date, interval='1h')
+    data = yf.download(symbol, start=start_date, end=end_date, interval='1m')
     data = data[['Open', 'High', 'Low', 'Close', 'Volume', 'Adj Close']]
     return data
 
@@ -184,6 +184,16 @@ def backtest(trades, data, initial_balance=100000, investment_fraction=0.1):
     overall_pnl_percent = math.log(final_balance / initial_balance) * 100
     return portfolio_value, final_balance, overall_pnl_percent
 
+def plot_balance_over_time(portfolio_value):
+    plt.figure(figsize=(10, 5))
+    plt.plot(portfolio_value, label='Balance Over Time')
+    plt.xlabel('Time')
+    plt.ylabel('Balance')
+    plt.title('Balance Over Time')
+    plt.legend()
+    plt.show()
+
+
 def plot_signals_and_trades(data, trades):
     plt.figure(figsize=(14, 7))
     plt.plot(data['Close'], label='Close Price')
@@ -219,7 +229,8 @@ def main(symbol, start_date, end_date, risk_factor):
     print(f"Final Balance: ${final_balance:.2f}")
     print(f"Overall PnL%: {overall_pnl_percent:.2f}%")
     plot_signals_and_trades(data, trades)
-    
+    plot_balance_over_time(portfolio_value)
+
     return portfolio_value, final_balance
 if __name__ == "__main__":
     symbol = 'JPY=X'  
