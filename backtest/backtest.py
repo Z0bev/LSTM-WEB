@@ -9,13 +9,13 @@ from keras.models import load_model
 from datetime import datetime, timedelta
 
 end_date = datetime.now()
-start_date = end_date - timedelta(days=7)
+start_date = end_date - timedelta(days=30)
 
 # Load your trained LSTM model
 model = load_model(r'trained_models\trained_model.h17')
 
 def load_data(symbol, start_date, end_date):
-    data = yf.download(symbol, start=start_date, end=end_date, interval='1m')
+    data = yf.download(symbol, start=start_date, end=end_date, interval='1h')
     data = data[['Open', 'High', 'Low', 'Close', 'Volume', 'Adj Close']]
     return data
 
