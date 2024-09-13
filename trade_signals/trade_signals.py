@@ -118,7 +118,7 @@ def should_sell(current_price, rsi, bb_sell_threshold, rsi_sell_threshold, signa
     
     return score / total_weight >= 0.9
 
-def get_trade_signals(data, signals, scaler, num_timesteps=10, take_profit_pct=0.05, stop_loss_pct=0.10, risk_factor=1):
+def get_trade_signals(data, signals, scaler, num_timesteps=10, take_profit_pct=0.05, stop_loss_pct=0.1, risk_factor=1):
     trades = []
     for i in range(num_timesteps, len(signals) + num_timesteps):
         current_price = data['Close'].iloc[i]
@@ -149,25 +149,31 @@ def get_trade_signals(data, signals, scaler, num_timesteps=10, take_profit_pct=0
     
     return trades
 
-def place_trade(action, symbol, qty):
+def place_trade(action, symbol, units, take_profit, stop_loss):
     if action == 'buy':
         api.submit_order(
             symbol=symbol,
-            qty=qty,
+            qty=units,
             side='buy',
             type='market',
-            time_in_force='gtc'
+            time_in_force='gtc',
+            order_class='bracket',
+            take_profit={'limit_price': take_profit},
+            stop_loss={'stop_price': stop_loss}
         )
-        print(f"Placed buy order for {qty} shares of {symbol}")
+        print(f"Placed buy order for {units} shares of {symbol} with take profit at {take_profit} and stop loss at {stop_loss}")
     elif action == 'sell':
         api.submit_order(
             symbol=symbol,
-            qty=qty,
+            qty=units,
             side='sell',
             type='market',
-            time_in_force='gtc'
+            time_in_force='gtc',
+            order_class='bracket',
+            take_profit={'limit_price': take_profit},
+            stop_loss={'stop_price': stop_loss}
         )
-        print(f"Placed sell order for {qty} shares of {symbol}")
+        print(f"Placed sell order for {units} shares of {symbol} with take profit at {take_profit} and stop loss at {stop_loss}")
 
 def exec_trades(trades, data, initial_balance=10000, investment_fraction=0.1):
     balance = initial_balance
@@ -180,8 +186,8 @@ def exec_trades(trades, data, initial_balance=10000, investment_fraction=0.1):
         index = trade['index']
         action = trade['action']
         price = trade['price']
-        take_profit = trade['take_profit']
-        stop_loss = trade['stop_loss']
+        take_profit = round(trade['take_profit'], 2)
+        stop_loss = round(trade['stop_loss'], 2)
         trade['executed'] = False
 
         if action == 'buy' and position is None:
@@ -191,7 +197,7 @@ def exec_trades(trades, data, initial_balance=10000, investment_fraction=0.1):
             entry_price = price
             balance -= units * price
             position = 'long'
-            place_trade('buy', 'AAPL', units)  # Example symbol
+            place_trade('buy', symbol, units, take_profit, stop_loss)  # Example symbol
             print(f"Bought {units} units at ${entry_price:.2f} (Signal Index: {index})")
             
 
@@ -202,7 +208,7 @@ def exec_trades(trades, data, initial_balance=10000, investment_fraction=0.1):
             entry_price = price
             balance += units * price
             position = 'short'
-            place_trade('sell', 'AAPL', units)  # Example symbol
+            place_trade('sell', symbol, units, take_profit, stop_loss)  # Example symbol
             print(f"Sold short {units} units at ${entry_price:.2f} (Signal Index: {index})")
             
 
@@ -213,7 +219,7 @@ def exec_trades(trades, data, initial_balance=10000, investment_fraction=0.1):
                 if current_price >= take_profit or current_price <= stop_loss:
                     proceeds = units * current_price
                     balance += proceeds
-                    place_trade('sell', 'AAPL', units)  # Example symbol
+                    place_trade('sell', symbol, units, take_profit, stop_loss)  # Example symbol
                     print(f"Closed long position at ${current_price:.2f} (Signal Index: {i})")
                     position = None
                     break
@@ -224,7 +230,7 @@ def exec_trades(trades, data, initial_balance=10000, investment_fraction=0.1):
                 if current_price <= take_profit or current_price >= stop_loss:
                     proceeds = units * current_price
                     balance -= proceeds
-                    place_trade('buy', 'AAPL', units)  # Example symbol
+                    place_trade('buy', symbol, units, take_profit, stop_loss)  # Example symbol
                     print(f"Closed short position at ${current_price:.2f} (Signal Index: {i})")
                     position = None
                     break
