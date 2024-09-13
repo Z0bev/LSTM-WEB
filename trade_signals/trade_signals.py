@@ -203,7 +203,7 @@ def main(symbol, start_date, end_date, risk_factor):
 
     print(f"Final Balance: ${final_balance:.2f}")
     print(f"Overall PnL%: {overall_pnl_percent:.2f}%")
-    plot_executed_trades(data, trades)
+    
     
 
     return portfolio_value, final_balance
