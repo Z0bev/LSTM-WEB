@@ -109,14 +109,14 @@ def get_trade_signals(data, signals, scaler, num_timesteps=10, take_profit_pct=0
             take_profit = current_price * (1 + take_profit_pct)
             stop_loss = current_price * (1 - stop_loss_pct)
             trades.append({'index': i, 'action': 'buy', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss})
-            #print(f"Buy Signal Generated at Index: {i}, Price: {current_price}")
+            print(f"Buy Signal Generated at Index: {i}, Price: {current_price}, 'take_profit': {take_profit}, 'stop_loss': {stop_loss}")
         
         # Check for sell signal
         elif should_sell(current_price, rsi, bb_sell_threshold, rsi_sell_threshold, signal) and current_price > ma and current_price > ema:
             take_profit = current_price * (1 - take_profit_pct)
             stop_loss = current_price * (1 + stop_loss_pct)
             trades.append({'index': i, 'action': 'sell', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss})
-            #print(f"Sell Signal Generated at Index: {i}, Price: {current_price}")
+            print(f"Sell Signal Generated at Index: {i}, Price: {current_price}, 'take_profit': {take_profit}, 'stop_loss': {stop_loss}")
     
     return trades
 
@@ -185,14 +185,14 @@ def backtest(trades, data, initial_balance=100000, investment_fraction=0.1):
     return portfolio_value, final_balance, overall_pnl_percent
 
 def plot_balance_over_time(portfolio_value):
-    plt.figure(figsize=(10, 5))
-    plt.plot(portfolio_value, label='Balance Over Time')
+    plt.figure(figsize=(14, 7))
+    plt.plot(portfolio_value, label='Balance Over Time', color='blue', linewidth=2)
     plt.xlabel('Time')
     plt.ylabel('Balance')
     plt.title('Balance Over Time')
     plt.legend()
+    plt.grid(True)
     plt.show()
-
 
 def plot_signals_and_trades(data, trades):
     plt.figure(figsize=(14, 7))
@@ -213,6 +213,7 @@ def plot_signals_and_trades(data, trades):
     plt.xlabel('Date')
     plt.ylabel('Price')
     plt.legend()
+    plt.grid(True)
     plt.show()
 
 def main(symbol, start_date, end_date, risk_factor):
@@ -225,7 +226,7 @@ def main(symbol, start_date, end_date, risk_factor):
     trades = get_trade_signals(data, signals, scaler, risk_factor=risk_factor)
     
     portfolio_value, final_balance, overall_pnl_percent = backtest(trades, data)
-    
+
     print(f"Final Balance: ${final_balance:.2f}")
     print(f"Overall PnL%: {overall_pnl_percent:.2f}%")
     plot_signals_and_trades(data, trades)
