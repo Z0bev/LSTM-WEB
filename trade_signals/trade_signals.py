@@ -19,7 +19,6 @@ APCA_API_SECRET_KEY=('Lrd8mLgbruIfThxbyYIkQF1ITfmnzP8N0cSMOhzO')
 BASE_URL='https://paper-api.alpaca.markets'
 api = tradeapi.REST(APCA_API_KEY_ID, APCA_API_SECRET_KEY, BASE_URL, api_version='v2')
 
-
 end_date = datetime.now()
 start_date = end_date - timedelta(days=30)
 
@@ -229,7 +228,6 @@ def exec_trades(trades, data, initial_balance=10000, investment_fraction=0.1):
                     print(f"Closed short position at ${current_price:.2f} (Signal Index: {i})")
                     position = None
                     break
-
 
 def main(symbol, start_date, end_date, risk_factor):
     data = load_data(symbol, start_date, end_date)
