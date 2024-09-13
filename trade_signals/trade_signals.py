@@ -118,7 +118,7 @@ def should_sell(current_price, rsi, bb_sell_threshold, rsi_sell_threshold, signa
     
     return score / total_weight >= 0.9
 
-def get_trade_signals(data, signals, scaler, num_timesteps=10, take_profit_pct=0.05, stop_loss_pct=0.1, risk_factor=1):
+def get_trade_signals(data, signals, num_timesteps=10, take_profit_pct=0.05, stop_loss_pct=0.1, risk_factor=1):
     trades = []
     for i in range(num_timesteps, len(signals) + num_timesteps):
         current_price = data['Close'].iloc[i]
@@ -149,38 +149,65 @@ def get_trade_signals(data, signals, scaler, num_timesteps=10, take_profit_pct=0
     
     return trades
 
-def place_trade(action, symbol, units, take_profit, stop_loss):
-    if action == 'buy':
-        api.submit_order(
-            symbol=symbol,
-            qty=units,
-            side='buy',
-            type='market',
-            time_in_force='gtc',
-            order_class='bracket',
-            take_profit={'limit_price': take_profit},
-            stop_loss={'stop_price': stop_loss}
-        )
-        print(f"Placed buy order for {units} shares of {symbol} with take profit at {take_profit} and stop loss at {stop_loss}")
-    elif action == 'sell':
-        api.submit_order(
-            symbol=symbol,
-            qty=units,
-            side='sell',
-            type='market',
-            time_in_force='gtc',
-            order_class='bracket',
-            take_profit={'limit_price': take_profit},
-            stop_loss={'stop_price': stop_loss}
-        )
-        print(f"Placed sell order for {units} shares of {symbol} with take profit at {take_profit} and stop loss at {stop_loss}")
+def get_position(symbol):
+    try:
+        position = api.get_position(symbol)
+        return {
+            'symbol': position.symbol,
+            'qty': int(position.qty),
+            'side': 'long' if int(position.qty) > 0 else 'short',
+            'avg_entry_price': float(position.avg_entry_price)
+        }
+    except tradeapi.rest.APIError as e:
+        if 'position does not exist' in str(e):
+            return None
+        else:
+            raise
 
-def exec_trades(trades, data, initial_balance=10000, investment_fraction=0.1):
-    balance = initial_balance
-    portfolio_value = []
-    position = None
-    units = 0
-    entry_price = 0
+def place_trade(action, symbol, units, take_profit, stop_loss):
+    try:
+        if action == 'buy':
+            order = api.submit_order(
+                symbol=symbol,
+                qty=units,
+                side='buy',
+                type='market',
+                time_in_force='gtc',
+                order_class='bracket',
+                take_profit={'limit_price': take_profit},
+                stop_loss={'stop_price': stop_loss}
+            )
+        elif action == 'sell':
+            order = api.submit_order(
+                symbol=symbol,
+                qty=units,
+                side='sell',
+                type='market',
+                time_in_force='gtc',
+                order_class='bracket',
+                take_profit={'limit_price': take_profit},
+                stop_loss={'stop_price': stop_loss}
+            )
+        print(f"Placed {action} order for {units} shares of {symbol} with take profit at {take_profit} and stop loss at {stop_loss}")
+        return order
+    except tradeapi.rest.APIError as e:
+        print(f"Error placing order: {e}")
+        return None
+
+def close_position(symbol):
+    try:
+        api.close_position(symbol)
+        print(f"Closed position for {symbol}")
+    except tradeapi.rest.APIError as e:
+        print(f"Error closing position: {e}")
+
+def get_account():
+    return api.get_account()
+
+def exec_trades(trades, data, symbol, initial_balance=10000, investment_fraction=0.1):
+    account = get_account()
+    balance = float(account.cash)
+    trade_history = []
     
     for trade in trades:
         index = trade['index']
@@ -188,52 +215,60 @@ def exec_trades(trades, data, initial_balance=10000, investment_fraction=0.1):
         price = trade['price']
         take_profit = round(trade['take_profit'], 2)
         stop_loss = round(trade['stop_loss'], 2)
-        trade['executed'] = False
 
-        if action == 'buy' and position is None:
+        current_position = get_position(symbol)
+
+        if action == 'buy' and (current_position is None or current_position['side'] == 'short'):
+            # Close any existing short position
+            if current_position and current_position['side'] == 'short':
+                close_position(symbol)
+                pnl = (current_position['avg_entry_price'] - price) * current_position['qty']
+                trade_history.append({'action': 'buy_to_cover', 'price': price, 'units': current_position['qty'], 'pnl': pnl})
+            
             # Open a long position
             amount_to_invest = balance * investment_fraction
-            units = amount_to_invest // price
-            entry_price = price
-            balance -= units * price
-            position = 'long'
-            place_trade('buy', symbol, units, take_profit, stop_loss)  # Example symbol
-            print(f"Bought {units} units at ${entry_price:.2f} (Signal Index: {index})")
-            
+            units = int(amount_to_invest // price)
+            order = place_trade('buy', symbol, units, take_profit, stop_loss)
+            if order:
+                print(f"Bought {units} units at ${price:.2f} (Signal Index: {index})")
+                trade_history.append({'action': 'buy', 'price': price, 'units': units})
 
-        elif action == 'sell' and position is None:
+        elif action == 'sell' and (current_position is None or current_position['side'] == 'long'):
+            # Close any existing long position
+            if current_position and current_position['side'] == 'long':
+                close_position(symbol)
+                pnl = (price - current_position['avg_entry_price']) * current_position['qty']
+                trade_history.append({'action': 'sell', 'price': price, 'units': current_position['qty'], 'pnl': pnl})
+            
             # Open a short position
             amount_to_invest = balance * investment_fraction
-            units = amount_to_invest // price
-            entry_price = price
-            balance += units * price
-            position = 'short'
-            place_trade('sell', symbol, units, take_profit, stop_loss)  # Example symbol
-            print(f"Sold short {units} units at ${entry_price:.2f} (Signal Index: {index})")
-            
+            units = int(amount_to_invest // price)
+            order = place_trade('sell', symbol, units, take_profit, stop_loss)
+            if order:
+                print(f"Sold short {units} units at ${price:.2f} (Signal Index: {index})")
+                trade_history.append({'action': 'sell_short', 'price': price, 'units': units})
 
-        # Monitor the position for take profit or stop loss
-        if position == 'long':
-            for i in range(index, len(data)):
-                current_price = data['Close'].iloc[i]
-                if current_price >= take_profit or current_price <= stop_loss:
-                    proceeds = units * current_price
-                    balance += proceeds
-                    place_trade('sell', symbol, units, take_profit, stop_loss)  # Example symbol
-                    print(f"Closed long position at ${current_price:.2f} (Signal Index: {i})")
-                    position = None
-                    break
+        # Update account balance
+        account = get_account()
+        balance = float(account.cash)
 
-        elif position == 'short':
-            for i in range(index, len(data)):
-                current_price = data['Close'].iloc[i]
-                if current_price <= take_profit or current_price >= stop_loss:
-                    proceeds = units * current_price
-                    balance -= proceeds
-                    place_trade('buy', symbol, units, take_profit, stop_loss)  # Example symbol
-                    print(f"Closed short position at ${current_price:.2f} (Signal Index: {i})")
-                    position = None
-                    break
+    # Close any remaining positions at the end
+    final_position = get_position(symbol)
+    if final_position:
+        close_position(symbol)
+        final_price = data['Close'].iloc[-1]
+        if final_position['side'] == 'long':
+            pnl = (final_price - final_position['avg_entry_price']) * final_position['qty']
+        else:
+            pnl = (final_position['avg_entry_price'] - final_price) * final_position['qty']
+        trade_history.append({'action': 'close_final_position', 'price': final_price, 'units': final_position['qty'], 'pnl': pnl})
+
+    account = get_account()
+    final_balance = float(account.portfolio_value)
+    overall_pnl = final_balance - initial_balance
+    overall_pnl_percent = (overall_pnl / initial_balance) * 100
+
+    return final_balance, overall_pnl_percent, trade_history
 
 def main(symbol, start_date, end_date, risk_factor):
     data = load_data(symbol, start_date, end_date)
@@ -241,13 +276,20 @@ def main(symbol, start_date, end_date, risk_factor):
     scaled_data, scaler = preprocess_data(data)
     X = create_lstm_input(scaled_data)
     signals = generate_signals(model, X)
-    trades = get_trade_signals(data, signals, scaler, risk_factor=risk_factor)
-    portfolio_value, final_balance, overall_pnl_percent = exec_trades(trades, data)
+    trades = get_trade_signals(data, signals, risk_factor=risk_factor)
+    final_balance, overall_pnl_percent, trade_history = exec_trades(trades, data, symbol)
     print(f"Final Balance: ${final_balance:.2f}")
     print(f"Overall PnL%: {overall_pnl_percent:.2f}%")
-    return portfolio_value, final_balance
+    return final_balance, overall_pnl_percent, trade_history
 
 if __name__ == "__main__":
     symbol = 'SPY'  
     risk_factor = 1.4 
-    portfolio_value, final_balance = main(symbol, start_date, end_date, risk_factor)
+    final_balance, overall_pnl_percent, trade_history = main(symbol, start_date, end_date, risk_factor)
+
+    # Print trade history summary
+    print("\nTrade History Summary:")
+    for trade in trade_history:
+        print(f"{trade['action']} at ${trade['price']:.2f}, Units: {trade['units']}")
+        if 'pnl' in trade:
+            print(f"PnL: ${trade['pnl']:.2f}")
