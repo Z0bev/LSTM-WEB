@@ -17,8 +17,8 @@ import pytz
 # Load environment variables from .env file
 load_dotenv()
 
-APCA_API_KEY_ID=('PK6E1S3XXEJ6SIFT9YK0')
-APCA_API_SECRET_KEY=('Lrd8mLgbruIfThxbyYIkQF1ITfmnzP8N0cSMOhzO')
+APCA_API_KEY_ID=('PK1PZCMM0UIDU332OQ6D')
+APCA_API_SECRET_KEY=('0MYLdeaYEiy8CFfuFNHmfQ8cPauQiMzXmvbzz9mc')
 BASE_URL='https://paper-api.alpaca.markets'
 api = tradeapi.REST(APCA_API_KEY_ID, APCA_API_SECRET_KEY, BASE_URL, api_version='v2')
 
@@ -29,7 +29,7 @@ start_date = end_date - timedelta(days=30)
 model = load_model(r'trained_models\trained_model.h17')
 
 def load_data(symbol, start_date, end_date):
-    try:
+    
         # Format dates to 'YYYY-MM-DD'
         start_date_str = start_date.strftime('%Y-%m-%d')
         end_date_str = end_date.strftime('%Y-%m-%d')
@@ -44,12 +44,6 @@ def load_data(symbol, start_date, end_date):
         df.columns = ['Open', 'High', 'Low', 'Close', 'Volume']
         df['Adj Close'] = df['Close']
         return df
-    except tradeapi.rest.APIError as e:
-        print(f"Alpaca API error: {e}")
-        print("Falling back to Yahoo Finance data...")
-        data = yf.download(symbol, start=start_date, end=end_date, interval='5m')
-        data = data[['Open', 'High', 'Low', 'Close', 'Volume', 'Adj Close']]
-        return data
 
 def calculate_indicators(data):
     data = data.copy()
@@ -141,14 +135,14 @@ def get_trade_signals(data, signals, num_timesteps=10, take_profit_pct=0.05, sto
             take_profit = current_price * (1 + take_profit_pct)
             stop_loss = current_price * (1 - stop_loss_pct)
             trades.append({'index': i, 'action': 'buy', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss, 'executed': False})
-            #print(f"Buy Signal Generated at Index: {i}, Price: {current_price}, 'take_profit': {take_profit}, 'stop_loss': {stop_loss}")
+            print(f"Buy Signal Generated at Index: {i}, Price: {current_price}, 'take_profit': {take_profit}, 'stop_loss': {stop_loss}")
             
             # Check for sell signal
         elif should_sell(current_price, rsi, bb_sell_threshold, rsi_sell_threshold, signal) and current_price > ma and current_price > ema:
                 take_profit = current_price * (1 - take_profit_pct)
                 stop_loss = current_price * (1 + stop_loss_pct)
                 trades.append({'index': i, 'action': 'sell', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss, 'executed': False})
-                #print(f"Sell Signal Generated at Index: {i}, Price: {current_price}, 'take_profit': {take_profit}, 'stop_loss': {stop_loss}")
+                print(f"Sell Signal Generated at Index: {i}, Price: {current_price}, 'take_profit': {take_profit}, 'stop_loss': {stop_loss}")
     
     return trades
 
@@ -318,17 +312,24 @@ def run_trading_loop(symbol, risk_factor, investment_fraction=0.1):
                     logging.info(f"PnL: ${trade['pnl']:.2f}")
             
             # Wait for a short period before next iteration
-            time.sleep(60)  # Wait for 1 minute
+            time.sleep(60)  
 
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}")
-            time.sleep(300)  # Wait for 5 minutes before retrying
+            time.sleep(300)  
 
+logging.basicConfig(
+    filename='trading_bot.log',  
+    level=logging.DEBUG,         
+    format='%(asctime)s - %(levelname)s - %(message)s',  
+    datefmt='%Y-%m-%d %H:%M:%S'  
+)
 
+def main():
+    symbol = 'AAPL'
+    risk_factor = 1.4
+    print("Starting Trading bot...")
+    run_trading_loop(symbol, risk_factor)
 
 if __name__ == "__main__":
-    symbol = 'SPY'
-    risk_factor = 1.4
-    
-    logging.info("Starting 24/7 trading bot...")
-    run_trading_loop(symbol, risk_factor)
+    main()

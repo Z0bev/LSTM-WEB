@@ -1,0 +1,38 @@
+2024-09-13 21:48:39 - DEBUG - Starting new HTTPS connection (1): paper-api.alpaca.markets:443
+2024-09-13 21:48:39 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/clock HTTP/1.1" 200 147
+2024-09-13 21:48:39 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/clock HTTP/1.1" 200 148
+2024-09-13 21:48:39 - INFO - Market is closed. Waiting for 3881.36 minutes until market opens.
+2024-09-13 21:49:53 - DEBUG - Starting new HTTPS connection (1): paper-api.alpaca.markets:443
+2024-09-13 21:49:53 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/clock HTTP/1.1" 200 148
+2024-09-13 21:49:53 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/clock HTTP/1.1" 200 148
+2024-09-13 21:49:53 - INFO - Market is closed. Waiting for 3880.12 minutes until market opens.
+2024-09-13 21:50:57 - DEBUG - Starting new HTTPS connection (1): data.alpaca.markets:443
+2024-09-13 21:50:57 - DEBUG - https://data.alpaca.markets:443 "GET /v2/stocks/BTC/USD/bars?timeframe=1Min&adjustment=raw&start=2024-09-13&end=2024-09-13 HTTP/1.1" 404 24
+2024-09-13 21:50:57 - DEBUG - Starting new HTTPS connection (1): query2.finance.yahoo.com:443
+2024-09-13 21:50:57 - DEBUG - https://query2.finance.yahoo.com:443 "GET /v8/finance/chart/BTC/USD?range=1d&interval=1d HTTP/1.1" 404 3151
+2024-09-13 21:50:57 - ERROR - An error occurred: negative dimensions are not allowed
+2024-09-13 21:53:22 - DEBUG - Starting new HTTPS connection (1): data.alpaca.markets:443
+2024-09-13 21:53:23 - DEBUG - https://data.alpaca.markets:443 "GET /v2/stocks/SPY/bars?timeframe=1Min&adjustment=raw&start=2024-09-13&end=2024-09-13 HTTP/1.1" 403 68
+2024-09-13 21:53:23 - DEBUG - Starting new HTTPS connection (1): query2.finance.yahoo.com:443
+2024-09-13 21:53:23 - DEBUG - https://query2.finance.yahoo.com:443 "GET /v8/finance/chart/SPY?period1=1726259002&period2=1726260802&interval=5m&includePrePost=False&events=div%2Csplits%2CcapitalGains HTTP/1.1" 200 1032
+2024-09-13 21:53:23 - ERROR - An error occurred: negative dimensions are not allowed
+2024-09-13 21:54:41 - DEBUG - Starting new HTTPS connection (1): data.alpaca.markets:443
+2024-09-13 21:54:41 - DEBUG - https://data.alpaca.markets:443 "GET /v2/stocks/SPY/bars?timeframe=1Min&adjustment=raw&start=2024-09-13&end=2024-09-13 HTTP/1.1" 403 68
+2024-09-13 21:54:41 - ERROR - An error occurred: subscription does not permit querying recent SIP data
+2024-09-13 21:56:25 - DEBUG - Starting new HTTPS connection (1): data.alpaca.markets:443
+2024-09-13 21:56:25 - DEBUG - https://data.alpaca.markets:443 "GET /v2/stocks/SPY/bars?timeframe=1Min&adjustment=raw&start=2024-09-13&end=2024-09-13 HTTP/1.1" 403 68
+2024-09-13 21:56:25 - ERROR - An error occurred: subscription does not permit querying recent SIP data
+2024-09-13 21:57:04 - DEBUG - Starting new HTTPS connection (1): data.alpaca.markets:443
+2024-09-13 21:57:05 - DEBUG - https://data.alpaca.markets:443 "GET /v2/stocks/SPY/bars?timeframe=1Hour&adjustment=raw&start=2024-09-13&end=2024-09-13 HTTP/1.1" 403 68
+2024-09-13 21:57:05 - ERROR - An error occurred: subscription does not permit querying recent SIP data
+2024-09-13 21:58:19 - DEBUG - Starting new HTTPS connection (1): data.alpaca.markets:443
+2024-09-13 21:58:20 - DEBUG - https://data.alpaca.markets:443 "GET /v2/stocks/SPY/bars?timeframe=1Min&adjustment=raw&start=2024-09-13&end=2024-09-13 HTTP/1.1" 403 68
+2024-09-13 21:58:20 - ERROR - An error occurred: subscription does not permit querying recent SIP data
+2024-09-13 21:59:18 - DEBUG - Starting new HTTPS connection (1): paper-api.alpaca.markets:443
+2024-09-13 21:59:18 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/clock HTTP/1.1" 200 148
+2024-09-13 21:59:18 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/clock HTTP/1.1" 200 148
+2024-09-13 21:59:18 - INFO - Market is closed. Waiting for 3870.70 minutes until market opens.
+2024-09-13 21:59:41 - DEBUG - Starting new HTTPS connection (1): paper-api.alpaca.markets:443
+2024-09-13 21:59:41 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/clock HTTP/1.1" 200 148
+2024-09-13 21:59:41 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/clock HTTP/1.1" 200 148
+2024-09-13 21:59:41 - INFO - Market is closed. Waiting for 3870.32 minutes until market opens.
