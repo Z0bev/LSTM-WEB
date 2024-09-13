@@ -7,6 +7,18 @@ import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
 from datetime import datetime, timedelta
+import alpaca_trade_api as tradeapi
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+APCA_API_KEY_ID=('PK6E1S3XXEJ6SIFT9YK0')
+APCA_API_SECRET_KEY=('Lrd8mLgbruIfThxbyYIkQF1ITfmnzP8N0cSMOhzO')
+BASE_URL='https://paper-api.alpaca.markets'
+api = tradeapi.REST(APCA_API_KEY_ID, APCA_API_SECRET_KEY, BASE_URL, api_version='v2')
+
 
 end_date = datetime.now()
 start_date = end_date - timedelta(days=30)
@@ -15,9 +27,27 @@ start_date = end_date - timedelta(days=30)
 model = load_model(r'trained_models\trained_model.h17')
 
 def load_data(symbol, start_date, end_date):
-    data = yf.download(symbol, start=start_date, end=end_date, interval='5m')
-    data = data[['Open', 'High', 'Low', 'Close', 'Volume', 'Adj Close']]
-    return data
+    try:
+        # Format dates to 'YYYY-MM-DD'
+        start_date_str = start_date.strftime('%Y-%m-%d')
+        end_date_str = end_date.strftime('%Y-%m-%d')
+        
+        bars = api.get_bars(
+            symbol,
+            tradeapi.TimeFrame.Minute,
+            start=start_date_str,
+            end=end_date_str
+        ).df
+        df = bars[['open', 'high', 'low', 'close', 'volume']]
+        df.columns = ['Open', 'High', 'Low', 'Close', 'Volume']
+        df['Adj Close'] = df['Close']
+        return df
+    except tradeapi.rest.APIError as e:
+        print(f"Alpaca API error: {e}")
+        print("Falling back to Yahoo Finance data...")
+        data = yf.download(symbol, start=start_date, end=end_date, interval='5m')
+        data = data[['Open', 'High', 'Low', 'Close', 'Volume', 'Adj Close']]
+        return data
 
 def calculate_indicators(data):
     data = data.copy()
@@ -120,13 +150,33 @@ def get_trade_signals(data, signals, scaler, num_timesteps=10, take_profit_pct=0
     
     return trades
 
-def exec_trades(trades, data, initial_balance=1000, investment_fraction=0.5):
+def place_trade(action, symbol, qty):
+    if action == 'buy':
+        api.submit_order(
+            symbol=symbol,
+            qty=qty,
+            side='buy',
+            type='market',
+            time_in_force='gtc'
+        )
+        print(f"Placed buy order for {qty} shares of {symbol}")
+    elif action == 'sell':
+        api.submit_order(
+            symbol=symbol,
+            qty=qty,
+            side='sell',
+            type='market',
+            time_in_force='gtc'
+        )
+        print(f"Placed sell order for {qty} shares of {symbol}")
+
+def exec_trades(trades, data, initial_balance=10000, investment_fraction=0.1):
     balance = initial_balance
     portfolio_value = []
     position = None
     units = 0
     entry_price = 0
-
+    
     for trade in trades:
         index = trade['index']
         action = trade['action']
@@ -142,7 +192,8 @@ def exec_trades(trades, data, initial_balance=1000, investment_fraction=0.5):
             entry_price = price
             balance -= units * price
             position = 'long'
-            print(f"New Long Position: {units} units at ${entry_price:.2f}")
+            place_trade('buy', 'AAPL', units)  # Example symbol
+            print(f"Bought {units} units at ${entry_price:.2f} (Signal Index: {index})")
             
 
         elif action == 'sell' and position is None:
@@ -152,7 +203,8 @@ def exec_trades(trades, data, initial_balance=1000, investment_fraction=0.5):
             entry_price = price
             balance += units * price
             position = 'short'
-            print(f"New Short Position: {units} units at ${entry_price:.2f}")
+            place_trade('sell', 'AAPL', units)  # Example symbol
+            print(f"Sold short {units} units at ${entry_price:.2f} (Signal Index: {index})")
             
 
         # Monitor the position for take profit or stop loss
@@ -162,32 +214,21 @@ def exec_trades(trades, data, initial_balance=1000, investment_fraction=0.5):
                 if current_price >= take_profit or current_price <= stop_loss:
                     proceeds = units * current_price
                     balance += proceeds
-                    print(f"Closed Long Position: {units} units at ${current_price:.2f}, Profit: ${proceeds - (units * entry_price):.2f} (Signal Index: {index})")
+                    place_trade('sell', 'AAPL', units)  # Example symbol
+                    print(f"Closed long position at ${current_price:.2f} (Signal Index: {i})")
                     position = None
-                    units = 0
-                    entry_price = 0
-                    trade['executed'] = True
                     break
 
         elif position == 'short':
             for i in range(index, len(data)):
                 current_price = data['Close'].iloc[i]
                 if current_price <= take_profit or current_price >= stop_loss:
-                    cost = units * current_price
-                    balance -= cost
-                    print(f"Closed Short Position: {units} units at ${current_price:.2f}, Profit: ${(units * entry_price) - cost:.2f} (Signal Index: {index})")
+                    proceeds = units * current_price
+                    balance -= proceeds
+                    place_trade('buy', 'AAPL', units)  # Example symbol
+                    print(f"Closed short position at ${current_price:.2f} (Signal Index: {i})")
                     position = None
-                    units = 0
-                    entry_price = 0
-                    trade['executed'] = True
                     break
-
-        # Update portfolio value
-        portfolio_value.append(balance + (units * data['Close'].iloc[index] if position == 'long' else -units * data['Close'].iloc[index] if position == 'short' else 0))
-
-    final_balance = balance + (units * data['Close'].iloc[-1] if position == 'long' else -units * data['Close'].iloc[-1])
-    overall_pnl_percent = math.log(final_balance / initial_balance) * 100
-    return portfolio_value, final_balance, overall_pnl_percent
 
 
 def main(symbol, start_date, end_date, risk_factor):
@@ -196,18 +237,13 @@ def main(symbol, start_date, end_date, risk_factor):
     scaled_data, scaler = preprocess_data(data)
     X = create_lstm_input(scaled_data)
     signals = generate_signals(model, X)
-    
     trades = get_trade_signals(data, signals, scaler, risk_factor=risk_factor)
-    
     portfolio_value, final_balance, overall_pnl_percent = exec_trades(trades, data)
-
     print(f"Final Balance: ${final_balance:.2f}")
     print(f"Overall PnL%: {overall_pnl_percent:.2f}%")
-    
-    
-
     return portfolio_value, final_balance
+
 if __name__ == "__main__":
-    symbol = 'JPY=X'  
+    symbol = 'SPY'  
     risk_factor = 1.4 
     portfolio_value, final_balance = main(symbol, start_date, end_date, risk_factor)
