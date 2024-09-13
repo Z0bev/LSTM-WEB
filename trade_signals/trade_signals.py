@@ -10,6 +10,9 @@ from datetime import datetime, timedelta
 import alpaca_trade_api as tradeapi
 import os
 from dotenv import load_dotenv
+import time
+import logging
+import pytz
 
 # Load environment variables from .env file
 load_dotenv()
@@ -270,26 +273,62 @@ def exec_trades(trades, data, symbol, initial_balance=10000, investment_fraction
 
     return final_balance, overall_pnl_percent, trade_history
 
-def main(symbol, start_date, end_date, risk_factor):
-    data = load_data(symbol, start_date, end_date)
-    data = calculate_indicators(data)
-    scaled_data, scaler = preprocess_data(data)
-    X = create_lstm_input(scaled_data)
-    signals = generate_signals(model, X)
-    trades = get_trade_signals(data, signals, risk_factor=risk_factor)
-    final_balance, overall_pnl_percent, trade_history = exec_trades(trades, data, symbol)
-    print(f"Final Balance: ${final_balance:.2f}")
-    print(f"Overall PnL%: {overall_pnl_percent:.2f}%")
-    return final_balance, overall_pnl_percent, trade_history
+def is_market_open():
+    clock = api.get_clock()
+    return clock.is_open
+
+def wait_for_market_open():
+    clock = api.get_clock()
+    if not clock.is_open:
+        time_to_open = clock.next_open - clock.timestamp
+        logging.info(f'Market is closed. Waiting for {time_to_open.total_seconds() / 60:.2f} minutes until market opens.')
+        time.sleep(time_to_open.total_seconds())
+
+def get_trading_data(symbol, lookback_minutes=30):
+    end_date = datetime.now(pytz.UTC)
+    start_date = end_date - timedelta(minutes=lookback_minutes)
+    return load_data(symbol, start_date, end_date)
+
+def run_trading_loop(symbol, risk_factor, investment_fraction=0.1):
+    while True:
+        try:
+            if not is_market_open():
+                wait_for_market_open()
+            
+            # Get recent trading data
+            data = get_trading_data(symbol)
+            
+            # Calculate indicators and generate signals
+            data = calculate_indicators(data)
+            scaled_data, scaler = preprocess_data(data)
+            X = create_lstm_input(scaled_data)
+            signals = generate_signals(model, X)
+            
+            # Get trade signals
+            trades = get_trade_signals(data, signals, risk_factor=risk_factor)
+            
+            # Execute trades
+            balance, pnl_percent, trade_history = exec_trades(trades, data, symbol, investment_fraction=investment_fraction)
+            
+            # Log results
+            logging.info(f"Current Balance: ${balance:.2f}, PnL%: {pnl_percent:.2f}%")
+            for trade in trade_history:
+                logging.info(f"Trade: {trade['action']} at ${trade['price']:.2f}, Units: {trade['units']}")
+                if 'pnl' in trade:
+                    logging.info(f"PnL: ${trade['pnl']:.2f}")
+            
+            # Wait for a short period before next iteration
+            time.sleep(60)  # Wait for 1 minute
+
+        except Exception as e:
+            logging.error(f"An error occurred: {str(e)}")
+            time.sleep(300)  # Wait for 5 minutes before retrying
+
+
 
 if __name__ == "__main__":
-    symbol = 'SPY'  
-    risk_factor = 1.4 
-    final_balance, overall_pnl_percent, trade_history = main(symbol, start_date, end_date, risk_factor)
-
-    # Print trade history summary
-    print("\nTrade History Summary:")
-    for trade in trade_history:
-        print(f"{trade['action']} at ${trade['price']:.2f}, Units: {trade['units']}")
-        if 'pnl' in trade:
-            print(f"PnL: ${trade['pnl']:.2f}")
+    symbol = 'SPY'
+    risk_factor = 1.4
+    
+    logging.info("Starting 24/7 trading bot...")
+    run_trading_loop(symbol, risk_factor)
