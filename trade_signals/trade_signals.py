@@ -166,6 +166,16 @@ def exec_trades(trades, data, initial_balance=100000, investment_fraction=0.1):
                     entry_price = 0
                     trade['executed'] = True
                     break
+            else:
+                # Close the position at the end of the data
+                current_price = data['Close'].iloc[-1]
+                proceeds = units * current_price
+                balance += proceeds
+                print(f"Sold {units} units at ${current_price:.2f}, Profit: ${proceeds - (units * entry_price):.2f} (Signal Index: {index})")
+                position = None
+                units = 0
+                entry_price = 0
+                trade['executed'] = True
 
         elif position == 'short':
             for i in range(index, len(data)):
@@ -179,6 +189,16 @@ def exec_trades(trades, data, initial_balance=100000, investment_fraction=0.1):
                     entry_price = 0
                     trade['executed'] = True
                     break
+            else:
+                # Close the position at the end of the data
+                current_price = data['Close'].iloc[-1]
+                cost = units * current_price
+                balance -= cost
+                print(f"Bought back {units} units at ${current_price:.2f}, Profit: ${(units * entry_price) - cost:.2f} (Signal Index: {index})")
+                position = None
+                units = 0
+                entry_price = 0
+                trade['executed'] = True
 
         # Update portfolio value
         portfolio_value.append(balance + (units * data['Close'].iloc[index] if position == 'long' else 0))
@@ -186,38 +206,6 @@ def exec_trades(trades, data, initial_balance=100000, investment_fraction=0.1):
     final_balance = balance + (units * data['Close'].iloc[-1] if position == 'long' else -units * data['Close'].iloc[-1])
     overall_pnl_percent = math.log(final_balance / initial_balance) * 100
     return portfolio_value, final_balance, overall_pnl_percent
-
-# def plot_balance_over_time(portfolio_value):
-#     plt.figure(figsize=(14, 7))
-#     plt.plot(portfolio_value, label='Balance Over Time', color='blue', linewidth=2)
-#     plt.xlabel('Time')
-#     plt.ylabel('Balance')
-#     plt.title('Balance Over Time')
-#     plt.legend()
-#     plt.grid(True)
-#     plt.show()
-
-# def plot_signals_and_trades(data, trades):
-#     plt.figure(figsize=(14, 7))
-#     plt.plot(data['Close'], label='Close Price')
-    
-#     buy_signals = [trade for trade in trades if trade['action'] == 'buy']
-#     sell_signals = [trade for trade in trades if trade['action'] == 'sell']
-    
-#     plt.scatter(data.index[[trade['index'] for trade in buy_signals]], 
-#                 data['Close'][[trade['index'] for trade in buy_signals]], 
-#                 marker='^', color='g', label='Buy Signal', alpha=1)
-    
-#     plt.scatter(data.index[[trade['index'] for trade in sell_signals]], 
-#                 data['Close'][[trade['index'] for trade in sell_signals]], 
-#                 marker='v', color='r', label='Sell Signal', alpha=1)
-    
-#     plt.title('Trade Signals')
-#     plt.xlabel('Date')
-#     plt.ylabel('Price')
-#     plt.legend()
-#     plt.grid(True)
-#     plt.show()
 
 def plot_executed_trades(data, trades):
     plt.figure(figsize=(14, 7))
