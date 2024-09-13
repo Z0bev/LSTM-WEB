@@ -108,15 +108,15 @@ def get_trade_signals(data, signals, scaler, num_timesteps=10, take_profit_pct=0
         if should_buy(current_price, rsi, bb_buy_threshold, rsi_buy_threshold, signal) and current_price < ma and current_price < ema:
             take_profit = current_price * (1 + take_profit_pct)
             stop_loss = current_price * (1 - stop_loss_pct)
-            trades.append({'index': i, 'action': 'buy', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss})
+            trades.append({'index': i, 'action': 'buy', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss, 'executed': False})
             print(f"Buy Signal Generated at Index: {i}, Price: {current_price}, 'take_profit': {take_profit}, 'stop_loss': {stop_loss}")
-        
-        # Check for sell signal
+            
+            # Check for sell signal
         elif should_sell(current_price, rsi, bb_sell_threshold, rsi_sell_threshold, signal) and current_price > ma and current_price > ema:
-            take_profit = current_price * (1 - take_profit_pct)
-            stop_loss = current_price * (1 + stop_loss_pct)
-            trades.append({'index': i, 'action': 'sell', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss})
-            print(f"Sell Signal Generated at Index: {i}, Price: {current_price}, 'take_profit': {take_profit}, 'stop_loss': {stop_loss}")
+                take_profit = current_price * (1 - take_profit_pct)
+                stop_loss = current_price * (1 + stop_loss_pct)
+                trades.append({'index': i, 'action': 'sell', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss, 'executed': False})
+                print(f"Sell Signal Generated at Index: {i}, Price: {current_price}, 'take_profit': {take_profit}, 'stop_loss': {stop_loss}")
     
     return trades
 
@@ -133,6 +133,7 @@ def exec_trades(trades, data, initial_balance=100000, investment_fraction=0.1):
         price = trade['price']
         take_profit = trade['take_profit']
         stop_loss = trade['stop_loss']
+        trade['executed'] = False
 
         if action == 'buy' and position is None:
             # Open a long position
@@ -163,6 +164,7 @@ def exec_trades(trades, data, initial_balance=100000, investment_fraction=0.1):
                     position = None
                     units = 0
                     entry_price = 0
+                    trade['executed'] = True
                     break
 
         elif position == 'short':
@@ -175,6 +177,7 @@ def exec_trades(trades, data, initial_balance=100000, investment_fraction=0.1):
                     position = None
                     units = 0
                     entry_price = 0
+                    trade['executed'] = True
                     break
 
         # Update portfolio value
@@ -184,67 +187,54 @@ def exec_trades(trades, data, initial_balance=100000, investment_fraction=0.1):
     overall_pnl_percent = math.log(final_balance / initial_balance) * 100
     return portfolio_value, final_balance, overall_pnl_percent
 
-def evaluate_profitability(trades, data):
-    profitable_trades = 0
-    non_profitable_trades = 0
+# def plot_balance_over_time(portfolio_value):
+#     plt.figure(figsize=(14, 7))
+#     plt.plot(portfolio_value, label='Balance Over Time', color='blue', linewidth=2)
+#     plt.xlabel('Time')
+#     plt.ylabel('Balance')
+#     plt.title('Balance Over Time')
+#     plt.legend()
+#     plt.grid(True)
+#     plt.show()
 
-    for trade in trades:
-        index = trade['index']
-        action = trade['action']
-        take_profit = trade['take_profit']
-        stop_loss = trade['stop_loss']
+# def plot_signals_and_trades(data, trades):
+#     plt.figure(figsize=(14, 7))
+#     plt.plot(data['Close'], label='Close Price')
+    
+#     buy_signals = [trade for trade in trades if trade['action'] == 'buy']
+#     sell_signals = [trade for trade in trades if trade['action'] == 'sell']
+    
+#     plt.scatter(data.index[[trade['index'] for trade in buy_signals]], 
+#                 data['Close'][[trade['index'] for trade in buy_signals]], 
+#                 marker='^', color='g', label='Buy Signal', alpha=1)
+    
+#     plt.scatter(data.index[[trade['index'] for trade in sell_signals]], 
+#                 data['Close'][[trade['index'] for trade in sell_signals]], 
+#                 marker='v', color='r', label='Sell Signal', alpha=1)
+    
+#     plt.title('Trade Signals')
+#     plt.xlabel('Date')
+#     plt.ylabel('Price')
+#     plt.legend()
+#     plt.grid(True)
+#     plt.show()
 
-        if action == 'buy':
-            for future_price in data['Close'].iloc[index:]:
-                if future_price >= take_profit:
-                    profitable_trades += 1
-                    break
-                elif future_price <= stop_loss:
-                    non_profitable_trades += 1
-                    break
-
-        elif action == 'sell':
-            for future_price in data['Close'].iloc[index:]:
-                if future_price <= take_profit:
-                    profitable_trades += 1
-                    break
-                elif future_price >= stop_loss:
-                    non_profitable_trades += 1
-                    break
-
-    total_trades = profitable_trades + non_profitable_trades
-    if total_trades == 0:
-        return 0
-
-    profitability = (profitable_trades / total_trades) * 100
-    return profitability
-
-def plot_balance_over_time(portfolio_value):
-    plt.figure(figsize=(14, 7))
-    plt.plot(portfolio_value, label='Balance Over Time', color='blue', linewidth=2)
-    plt.xlabel('Time')
-    plt.ylabel('Balance')
-    plt.title('Balance Over Time')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-
-def plot_signals_and_trades(data, trades):
+def plot_executed_trades(data, trades):
     plt.figure(figsize=(14, 7))
     plt.plot(data['Close'], label='Close Price')
     
-    buy_signals = [trade for trade in trades if trade['action'] == 'buy']
-    sell_signals = [trade for trade in trades if trade['action'] == 'sell']
+    executed_buy_trades = [trade for trade in trades if trade['action'] == 'buy' and trade['executed']]
+    executed_sell_trades = [trade for trade in trades if trade['action'] == 'sell' and trade['executed']]
     
-    plt.scatter(data.index[[trade['index'] for trade in buy_signals]], 
-                data['Close'][[trade['index'] for trade in buy_signals]], 
-                marker='^', color='g', label='Buy Signal', alpha=1)
+    plt.scatter(data.index[[trade['index'] for trade in executed_buy_trades]], 
+                data['Close'][[trade['index'] for trade in executed_buy_trades]], 
+                marker='^', color='g', label='Executed Buy Trade', alpha=1)
     
-    plt.scatter(data.index[[trade['index'] for trade in sell_signals]], 
-                data['Close'][[trade['index'] for trade in sell_signals]], 
-                marker='v', color='r', label='Sell Signal', alpha=1)
+    plt.scatter(data.index[[trade['index'] for trade in executed_sell_trades]], 
+                data['Close'][[trade['index'] for trade in executed_sell_trades]], 
+                marker='v', color='r', label='Executed Sell Trade', alpha=1)
     
-    plt.title('Trade Signals')
+    plt.title('Executed Trades')
     plt.xlabel('Date')
     plt.ylabel('Price')
     plt.legend()
@@ -259,14 +249,13 @@ def main(symbol, start_date, end_date, risk_factor):
     signals = generate_signals(model, X)
     
     trades = get_trade_signals(data, signals, scaler, risk_factor=risk_factor)
-    profitability = evaluate_profitability(trades, data)
+    
     portfolio_value, final_balance, overall_pnl_percent = exec_trades(trades, data)
 
     print(f"Final Balance: ${final_balance:.2f}")
     print(f"Overall PnL%: {overall_pnl_percent:.2f}%")
-    print(f"Profitability: {profitability:.2f}%")
-    plot_signals_and_trades(data, trades)
-    plot_balance_over_time(portfolio_value)
+    plot_executed_trades(data, trades)
+    
 
     return portfolio_value, final_balance
 if __name__ == "__main__":
