@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 end_date = datetime.now()
 start_date = end_date - timedelta(days=30)
 
-# Load your trained LSTM model
+# Load trained LSTM model
 model = load_model(r'trained_models\trained_model.h17')
 
 def load_data(symbol, start_date, end_date):
@@ -120,7 +120,7 @@ def get_trade_signals(data, signals, scaler, num_timesteps=10, take_profit_pct=0
     
     return trades
 
-def backtest(trades, data, initial_balance=100000, investment_fraction=0.1):
+def exec_trades(trades, data, initial_balance=100000, investment_fraction=0.1):
     balance = initial_balance
     portfolio_value = []
     position = None
@@ -184,6 +184,41 @@ def backtest(trades, data, initial_balance=100000, investment_fraction=0.1):
     overall_pnl_percent = math.log(final_balance / initial_balance) * 100
     return portfolio_value, final_balance, overall_pnl_percent
 
+def evaluate_profitability(trades, data):
+    profitable_trades = 0
+    non_profitable_trades = 0
+
+    for trade in trades:
+        index = trade['index']
+        action = trade['action']
+        take_profit = trade['take_profit']
+        stop_loss = trade['stop_loss']
+
+        if action == 'buy':
+            for future_price in data['Close'].iloc[index:]:
+                if future_price >= take_profit:
+                    profitable_trades += 1
+                    break
+                elif future_price <= stop_loss:
+                    non_profitable_trades += 1
+                    break
+
+        elif action == 'sell':
+            for future_price in data['Close'].iloc[index:]:
+                if future_price <= take_profit:
+                    profitable_trades += 1
+                    break
+                elif future_price >= stop_loss:
+                    non_profitable_trades += 1
+                    break
+
+    total_trades = profitable_trades + non_profitable_trades
+    if total_trades == 0:
+        return 0
+
+    profitability = (profitable_trades / total_trades) * 100
+    return profitability
+
 def plot_balance_over_time(portfolio_value):
     plt.figure(figsize=(14, 7))
     plt.plot(portfolio_value, label='Balance Over Time', color='blue', linewidth=2)
@@ -224,11 +259,12 @@ def main(symbol, start_date, end_date, risk_factor):
     signals = generate_signals(model, X)
     
     trades = get_trade_signals(data, signals, scaler, risk_factor=risk_factor)
-    
-    portfolio_value, final_balance, overall_pnl_percent = backtest(trades, data)
+    profitability = evaluate_profitability(trades, data)
+    portfolio_value, final_balance, overall_pnl_percent = exec_trades(trades, data)
 
     print(f"Final Balance: ${final_balance:.2f}")
     print(f"Overall PnL%: {overall_pnl_percent:.2f}%")
+    print(f"Profitability: {profitability:.2f}%")
     plot_signals_and_trades(data, trades)
     plot_balance_over_time(portfolio_value)
 
