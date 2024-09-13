@@ -15,7 +15,7 @@ start_date = end_date - timedelta(days=30)
 model = load_model(r'trained_models\trained_model.h17')
 
 def load_data(symbol, start_date, end_date):
-    data = yf.download(symbol, start=start_date, end=end_date, interval='1h')
+    data = yf.download(symbol, start=start_date, end=end_date, interval='5m')
     data = data[['Open', 'High', 'Low', 'Close', 'Volume', 'Adj Close']]
     return data
 
@@ -109,18 +109,18 @@ def get_trade_signals(data, signals, scaler, num_timesteps=10, take_profit_pct=0
             take_profit = current_price * (1 + take_profit_pct)
             stop_loss = current_price * (1 - stop_loss_pct)
             trades.append({'index': i, 'action': 'buy', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss, 'executed': False})
-            print(f"Buy Signal Generated at Index: {i}, Price: {current_price}, 'take_profit': {take_profit}, 'stop_loss': {stop_loss}")
+            #print(f"Buy Signal Generated at Index: {i}, Price: {current_price}, 'take_profit': {take_profit}, 'stop_loss': {stop_loss}")
             
             # Check for sell signal
         elif should_sell(current_price, rsi, bb_sell_threshold, rsi_sell_threshold, signal) and current_price > ma and current_price > ema:
                 take_profit = current_price * (1 - take_profit_pct)
                 stop_loss = current_price * (1 + stop_loss_pct)
                 trades.append({'index': i, 'action': 'sell', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss, 'executed': False})
-                print(f"Sell Signal Generated at Index: {i}, Price: {current_price}, 'take_profit': {take_profit}, 'stop_loss': {stop_loss}")
+                #print(f"Sell Signal Generated at Index: {i}, Price: {current_price}, 'take_profit': {take_profit}, 'stop_loss': {stop_loss}")
     
     return trades
 
-def exec_trades(trades, data, initial_balance=100000, investment_fraction=0.1):
+def exec_trades(trades, data, initial_balance=1000, investment_fraction=0.5):
     balance = initial_balance
     portfolio_value = []
     position = None
@@ -142,7 +142,7 @@ def exec_trades(trades, data, initial_balance=100000, investment_fraction=0.1):
             entry_price = price
             balance -= units * price
             position = 'long'
-            print(f"Bought {units} units at ${entry_price:.2f} (Signal Index: {index})")
+            print(f"New Long Position: {units} units at ${entry_price:.2f}")
             
 
         elif action == 'sell' and position is None:
@@ -152,7 +152,7 @@ def exec_trades(trades, data, initial_balance=100000, investment_fraction=0.1):
             entry_price = price
             balance += units * price
             position = 'short'
-            print(f"Sold short {units} units at ${entry_price:.2f} (Signal Index: {index})")
+            print(f"New Short Position: {units} units at ${entry_price:.2f}")
             
 
         # Monitor the position for take profit or stop loss
@@ -162,7 +162,7 @@ def exec_trades(trades, data, initial_balance=100000, investment_fraction=0.1):
                 if current_price >= take_profit or current_price <= stop_loss:
                     proceeds = units * current_price
                     balance += proceeds
-                    print(f"Sold {units} units at ${current_price:.2f}, Profit: ${proceeds - (units * entry_price):.2f} (Signal Index: {index})")
+                    print(f"Closed Long Position: {units} units at ${current_price:.2f}, Profit: ${proceeds - (units * entry_price):.2f} (Signal Index: {index})")
                     position = None
                     units = 0
                     entry_price = 0
@@ -175,7 +175,7 @@ def exec_trades(trades, data, initial_balance=100000, investment_fraction=0.1):
                 if current_price <= take_profit or current_price >= stop_loss:
                     cost = units * current_price
                     balance -= cost
-                    print(f"Bought back {units} units at ${current_price:.2f}, Profit: ${(units * entry_price) - cost:.2f} (Signal Index: {index})")
+                    print(f"Closed Short Position: {units} units at ${current_price:.2f}, Profit: ${(units * entry_price) - cost:.2f} (Signal Index: {index})")
                     position = None
                     units = 0
                     entry_price = 0
