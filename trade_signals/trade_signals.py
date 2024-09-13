@@ -183,34 +183,12 @@ def exec_trades(trades, data, initial_balance=100000, investment_fraction=0.1):
                     break
 
         # Update portfolio value
-        portfolio_value.append(balance + (units * data['Close'].iloc[index] if position == 'long' else 0))
+        portfolio_value.append(balance + (units * data['Close'].iloc[index] if position == 'long' else -units * data['Close'].iloc[index] if position == 'short' else 0))
 
     final_balance = balance + (units * data['Close'].iloc[-1] if position == 'long' else -units * data['Close'].iloc[-1])
     overall_pnl_percent = math.log(final_balance / initial_balance) * 100
     return portfolio_value, final_balance, overall_pnl_percent
 
-
-def plot_executed_trades(data, trades):
-    plt.figure(figsize=(14, 7))
-    plt.plot(data['Close'], label='Close Price')
-    
-    executed_buy_trades = [trade for trade in trades if trade['action'] == 'buy' and trade['executed']]
-    executed_sell_trades = [trade for trade in trades if trade['action'] == 'sell' and trade['executed']]
-    
-    plt.scatter(data.index[[trade['index'] for trade in executed_buy_trades]], 
-                data['Close'][[trade['index'] for trade in executed_buy_trades]], 
-                marker='^', color='g', label='Executed Buy Trade', alpha=1)
-    
-    plt.scatter(data.index[[trade['index'] for trade in executed_sell_trades]], 
-                data['Close'][[trade['index'] for trade in executed_sell_trades]], 
-                marker='v', color='r', label='Executed Sell Trade', alpha=1)
-    
-    plt.title('Executed Trades')
-    plt.xlabel('Date')
-    plt.ylabel('Price')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
 
 def main(symbol, start_date, end_date, risk_factor):
     data = load_data(symbol, start_date, end_date)
