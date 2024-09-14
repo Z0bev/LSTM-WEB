@@ -9,13 +9,9 @@ from keras.models import load_model
 from datetime import datetime, timedelta
 import alpaca_trade_api as tradeapi
 import os
-from dotenv import load_dotenv
 import time
 import logging
 import pytz
-
-# Load environment variables from .env file
-load_dotenv()
 
 APCA_API_KEY_ID=('PK1PZCMM0UIDU332OQ6D')
 APCA_API_SECRET_KEY=('0MYLdeaYEiy8CFfuFNHmfQ8cPauQiMzXmvbzz9mc')
@@ -26,7 +22,7 @@ end_date = datetime.now()
 start_date = end_date - timedelta(days=30)
 
 # Load trained LSTM model
-model = load_model(r'trained_models\trained_model.h17')
+model = load_model(r'trained_models/trained_model.h17')
 
 def load_data(symbol, start_date, end_date):
     
@@ -46,7 +42,7 @@ def load_data(symbol, start_date, end_date):
         return df
 
 def calculate_indicators(data):
-    data = data.copy()
+    
     data['RSI'] = ta.momentum.RSIIndicator(data['Close'], window=14).rsi()
     data['MA'] = ta.trend.SMAIndicator(data['Close'], window=20).sma_indicator()
     data['EMA'] = ta.trend.EMAIndicator(data['Close'], window=20).ema_indicator()
@@ -56,6 +52,7 @@ def calculate_indicators(data):
     data.loc[:, 'BB_upper'] = bb.bollinger_hband()
     data.loc[:, 'BB_middle'] = bb.bollinger_mavg()
     data.loc[:, 'BB_lower'] = bb.bollinger_lband()
+    print(data)
     return data
 
 def preprocess_data(data):
@@ -278,9 +275,9 @@ def wait_for_market_open():
         logging.info(f'Market is closed. Waiting for {time_to_open.total_seconds() / 60:.2f} minutes until market opens.')
         time.sleep(time_to_open.total_seconds())
 
-def get_trading_data(symbol, lookback_minutes=30):
+def get_trading_data(symbol, lookback_days=30):
     end_date = datetime.now(pytz.UTC)
-    start_date = end_date - timedelta(minutes=lookback_minutes)
+    start_date = end_date - timedelta(days=lookback_days)
     return load_data(symbol, start_date, end_date)
 
 def run_trading_loop(symbol, risk_factor, investment_fraction=0.1):
@@ -326,7 +323,7 @@ logging.basicConfig(
 )
 
 def main():
-    symbol = 'AAPL'
+    symbol = 'SPY'
     risk_factor = 1.4
     print("Starting Trading bot...")
     run_trading_loop(symbol, risk_factor)
