@@ -43,6 +43,70 @@ def create_lstm_input(scaled_data, num_timesteps=10):
 def generate_signals(model, X):
     return model.predict(X)
 
+def backtest_signals(data, signals, num_timesteps=10, take_profit_pct=0.05, stop_loss_pct=0.1, risk_factor=1):
+    trades = []
+    open_position = None
+    balance = 100000  # Starting balance
+
+    for i in range(num_timesteps, len(signals) + num_timesteps):
+        current_price = data['Close'].iloc[i]
+        rsi = data['RSI'].iloc[i]
+        ma = data['MA'].iloc[i]
+        ema = data['EMA'].iloc[i]
+        bb_upper = data['BB_upper'].iloc[i]
+        bb_lower = data['BB_lower'].iloc[i]
+        signal = signals[i - num_timesteps]
+
+        # Calculate thresholds
+        rsi_buy_threshold = 30 * risk_factor
+        rsi_sell_threshold = 70 / risk_factor
+        bb_buy_threshold = bb_lower * risk_factor
+        bb_sell_threshold = bb_upper / risk_factor
+
+        # Check for buy signal
+        if (current_price < bb_buy_threshold and 
+            rsi < rsi_buy_threshold and 
+            signal < 0.85 and 
+            current_price < ma and 
+            current_price < ema and 
+            open_position is None):
+            take_profit = current_price * (1 + take_profit_pct)
+            stop_loss = current_price * (1 - stop_loss_pct)
+            trades.append({'index': i, 'action': 'buy', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss, 'executed': True})
+            open_position = {'action': 'buy', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss}
+
+        # Check for sell signal
+        elif (current_price > bb_sell_threshold and 
+                rsi > rsi_sell_threshold and 
+                signal > 0.05 and 
+                current_price > ma and 
+                current_price > ema and 
+                open_position is None):
+            take_profit = current_price * (1 - take_profit_pct)
+            stop_loss = current_price * (1 + stop_loss_pct)
+            trades.append({'index': i, 'action': 'sell', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss, 'executed': True})
+            open_position = {'action': 'sell', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss}
+
+        # Check for take profit or stop loss
+        if open_position:
+            if open_position['action'] == 'buy':
+                if current_price >= open_position['take_profit']:
+                    balance += (open_position['take_profit'] - open_position['price'])
+                    open_position = None
+                elif current_price <= open_position['stop_loss']:
+                    balance += (open_position['stop_loss'] - open_position['price'])
+                    open_position = None
+            elif open_position['action'] == 'sell':
+                if current_price <= open_position['take_profit']:
+                    balance += (open_position['price'] - open_position['take_profit'])
+                    open_position = None
+                elif current_price >= open_position['stop_loss']:
+                    balance += (open_position['price'] - open_position['stop_loss'])
+                    open_position = None
+
+    pnl = ((balance - 100000) / 100000) * 100  # Calculate PnL as a percentage
+    return trades, pnl
+
 def get_latest_signal(data, signals, num_timesteps=10, take_profit_pct=0.05, stop_loss_pct=0.1, risk_factor=1):
     current_price = data['Close'].iloc[-1]
     rsi = data['RSI'].iloc[-1]
@@ -91,15 +155,19 @@ def run_signal_generator(symbol, risk_factor=1.4, interval=60):
         X = create_lstm_input(scaled_data)
         signals = generate_signals(model, X)
         
+        # Backtest signals
+        trades, pnl = backtest_signals(data, signals, risk_factor=risk_factor)
+        
         # Get the latest trade signal
         latest_signal = get_latest_signal(data, signals, risk_factor=risk_factor)
         
         # Output new signal if available
         if latest_signal:
             print(f"Signal: {latest_signal['action']} {symbol} at {latest_signal['timestamp']}")
-            print(f"Price: ${latest_signal['price']:.2f}")
-            print(f"Take Profit: ${latest_signal['take_profit']:.2f}")
-            print(f"Stop Loss: ${latest_signal['stop_loss']:.2f}")
+            print(f"Price: {latest_signal['price']:.2f}")
+            print(f"Take Profit: {latest_signal['take_profit']:.2f}")
+            print(f"Stop Loss: {latest_signal['stop_loss']:.2f}")
+            print(f"PnL so far: %{pnl:.2f}")
             print("---")
         else:
             print(f"No new signal at {datetime.now()}")
