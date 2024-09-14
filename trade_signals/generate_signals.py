@@ -10,6 +10,7 @@ import logging
 
 # Load trained LSTM model
 model = load_model(r'trained_models/trained_model.h17')
+open_position = None
 
 def load_latest_data(symbol, period="30d"):
     data = yf.download(symbol, period=period, interval='5m')
@@ -42,6 +43,10 @@ def create_lstm_input(scaled_data, num_timesteps=10):
 
 def generate_signals(model, X):
     return model.predict(X)
+
+def get_position():
+    global open_position
+    return open_position
 
 def calculate_thresholds(rsi, bb_upper, bb_lower, risk_factor):
     rsi_buy_threshold = 30 * risk_factor
@@ -86,7 +91,7 @@ def should_sell(current_price, rsi, bb_sell_threshold, rsi_sell_threshold, signa
 
 def backtest_signals(data, signals, num_timesteps=10, take_profit_pct=0.05, stop_loss_pct=0.1, risk_factor=1):
     trades = []
-    open_position = None
+    global open_position
     balance = 100000  # Starting balance
 
     for i in range(num_timesteps, len(signals) + num_timesteps):
