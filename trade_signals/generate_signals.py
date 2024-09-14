@@ -11,8 +11,8 @@ import logging
 # Load trained LSTM model
 model = load_model(r'trained_models/trained_model.h17')
 
-def load_latest_data(symbol, period="1d"):
-    data = yf.download(symbol, period=period, interval='1m')
+def load_latest_data(symbol, period="30d"):
+    data = yf.download(symbol, period=period, interval='5m')
     return data
 
 def calculate_indicators(data):
@@ -110,4 +110,4 @@ def run_signal_generator(symbol, risk_factor=1.4, interval=60):
 if __name__ == "__main__":
     symbol = 'JPY=X'
     risk_factor = 1.4
-    run_signal_generator(symbol, interval=60)
+    run_signal_generator(symbol, interval=300)
