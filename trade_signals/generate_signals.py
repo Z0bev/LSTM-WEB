@@ -43,6 +43,47 @@ def create_lstm_input(scaled_data, num_timesteps=10):
 def generate_signals(model, X):
     return model.predict(X)
 
+def calculate_thresholds(rsi, bb_upper, bb_lower, risk_factor):
+    rsi_buy_threshold = 30 * risk_factor
+    rsi_sell_threshold = 70 / risk_factor
+    bb_buy_threshold = bb_lower * risk_factor
+    bb_sell_threshold = bb_upper / risk_factor
+    return rsi_buy_threshold, rsi_sell_threshold, bb_buy_threshold, bb_sell_threshold
+
+def should_buy(current_price, rsi, bb_buy_threshold, rsi_buy_threshold, signal):
+    score = 0
+    total_weight = 0
+    
+    conditions = [
+        (current_price < bb_buy_threshold, 1.0),  
+        (rsi < rsi_buy_threshold, 1.0),  
+        (signal < 0.85, 1)     
+    ]
+    
+    for condition, weight in conditions:
+        total_weight += weight
+        if condition:
+            score += weight
+    
+    return score / total_weight >= 0.9
+
+def should_sell(current_price, rsi, bb_sell_threshold, rsi_sell_threshold, signal):
+    score = 0
+    total_weight = 0
+    
+    conditions = [
+        (current_price > bb_sell_threshold, 1.0),  
+        (rsi > rsi_sell_threshold, 1.0),  
+        (signal > 0.05, 1)       
+    ]
+    
+    for condition, weight in conditions:
+        total_weight += weight
+        if condition:
+            score += weight
+    
+    return score / total_weight >= 0.9
+
 def backtest_signals(data, signals, num_timesteps=10, take_profit_pct=0.05, stop_loss_pct=0.1, risk_factor=1):
     trades = []
     open_position = None
@@ -58,30 +99,17 @@ def backtest_signals(data, signals, num_timesteps=10, take_profit_pct=0.05, stop
         signal = signals[i - num_timesteps]
 
         # Calculate thresholds
-        rsi_buy_threshold = 30 * risk_factor
-        rsi_sell_threshold = 70 / risk_factor
-        bb_buy_threshold = bb_lower * risk_factor
-        bb_sell_threshold = bb_upper / risk_factor
+        rsi_buy_threshold, rsi_sell_threshold, bb_buy_threshold, bb_sell_threshold = calculate_thresholds(rsi, bb_upper, bb_lower, risk_factor)
 
         # Check for buy signal
-        if (current_price < bb_buy_threshold and 
-            rsi < rsi_buy_threshold and 
-            signal < 0.85 and 
-            current_price < ma and 
-            current_price < ema and 
-            open_position is None):
+        if should_buy(current_price, rsi, bb_buy_threshold, rsi_buy_threshold, signal) and current_price < ma and current_price < ema and open_position is None:
             take_profit = current_price * (1 + take_profit_pct)
             stop_loss = current_price * (1 - stop_loss_pct)
             trades.append({'index': i, 'action': 'buy', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss, 'executed': True})
             open_position = {'action': 'buy', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss}
 
         # Check for sell signal
-        elif (current_price > bb_sell_threshold and 
-                rsi > rsi_sell_threshold and 
-                signal > 0.05 and 
-                current_price > ma and 
-                current_price > ema and 
-                open_position is None):
+        elif should_sell(current_price, rsi, bb_sell_threshold, rsi_sell_threshold, signal) and current_price > ma and current_price > ema and open_position is None:
             take_profit = current_price * (1 - take_profit_pct)
             stop_loss = current_price * (1 + stop_loss_pct)
             trades.append({'index': i, 'action': 'sell', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss, 'executed': True})
@@ -128,9 +156,9 @@ def get_latest_signal(data, signals, num_timesteps=10, take_profit_pct=0.05, sto
         signal < 0.85 and 
         current_price < ma and 
         current_price < ema):
-        take_profit = current_price * (1 + take_profit_pct)
-        stop_loss = current_price * (1 - stop_loss_pct)
-        return {'timestamp': data.index[-1], 'action': 'buy', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss}
+            take_profit = current_price * (1 + take_profit_pct)
+            stop_loss = current_price * (1 - stop_loss_pct)
+            return {'timestamp': data.index[-1], 'action': 'buy', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss}
     
     # Check for sell signal
     elif (current_price > bb_sell_threshold and 
@@ -138,9 +166,9 @@ def get_latest_signal(data, signals, num_timesteps=10, take_profit_pct=0.05, sto
           signal > 0.05 and 
           current_price > ma and 
           current_price > ema):
-        take_profit = current_price * (1 - take_profit_pct)
-        stop_loss = current_price * (1 + stop_loss_pct)
-        return {'timestamp': data.index[-1], 'action': 'sell', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss}
+            take_profit = current_price * (1 - take_profit_pct)
+            stop_loss = current_price * (1 + stop_loss_pct)
+            return {'timestamp': data.index[-1], 'action': 'sell', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss}
     
     return None
 
