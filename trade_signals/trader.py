@@ -22,7 +22,7 @@ end_date = datetime.now()
 start_date = end_date - timedelta(days=30)
 
 # Load trained LSTM model
-model = load_model(r'trained_models/trained_model.h17')
+model = load_model(r'trained_models\trained_model.h17')
 
 def load_data(symbol, start_date, end_date):
     

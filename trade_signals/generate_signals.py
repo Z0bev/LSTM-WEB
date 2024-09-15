@@ -62,7 +62,7 @@ def should_buy(current_price, rsi, bb_buy_threshold, rsi_buy_threshold, signal):
     conditions = [
         (current_price < bb_buy_threshold, 1.0),  
         (rsi < rsi_buy_threshold, 1.0),  
-        (signal < 0.85, 1)     
+        (signal < 0.85, 1.0)     
     ]
     
     for condition, weight in conditions:
@@ -79,7 +79,7 @@ def should_sell(current_price, rsi, bb_sell_threshold, rsi_sell_threshold, signa
     conditions = [
         (current_price > bb_sell_threshold, 1.0),  
         (rsi > rsi_sell_threshold, 1.0),  
-        (signal > 0.05, 1)       
+        (signal > 0.05, 1.0)       
     ]
     
     for condition, weight in conditions:
@@ -140,44 +140,7 @@ def backtest_signals(data, signals, num_timesteps=10, take_profit_pct=0.05, stop
     pnl = ((balance - 100000) / 100000) * 100  # Calculate PnL as a percentage
     return trades, pnl
 
-def get_latest_signal(data, signals, num_timesteps=10, take_profit_pct=0.05, stop_loss_pct=0.1, risk_factor=1):
-    current_price = data['Close'].iloc[-1]
-    rsi = data['RSI'].iloc[-1]
-    ma = data['MA'].iloc[-1]
-    ema = data['EMA'].iloc[-1]
-    bb_upper = data['BB_upper'].iloc[-1]
-    bb_lower = data['BB_lower'].iloc[-1]
-    signal = signals[-1]
-    
-    # Calculate thresholds
-    rsi_buy_threshold = 30 * risk_factor
-    rsi_sell_threshold = 70 / risk_factor
-    bb_buy_threshold = bb_lower * risk_factor
-    bb_sell_threshold = bb_upper / risk_factor
-
-    # Check for buy signal
-    if (current_price < bb_buy_threshold and 
-        rsi < rsi_buy_threshold and 
-        signal < 0.85 and 
-        current_price < ma and 
-        current_price < ema):
-            take_profit = current_price * (1 + take_profit_pct)
-            stop_loss = current_price * (1 - stop_loss_pct)
-            return {'timestamp': data.index[-1], 'action': 'buy', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss}
-    
-    # Check for sell signal
-    elif (current_price > bb_sell_threshold and 
-          rsi > rsi_sell_threshold and 
-          signal > 0.05 and 
-          current_price > ma and 
-          current_price > ema):
-            take_profit = current_price * (1 - take_profit_pct)
-            stop_loss = current_price * (1 + stop_loss_pct)
-            return {'timestamp': data.index[-1], 'action': 'sell', 'price': current_price, 'take_profit': take_profit, 'stop_loss': stop_loss}
-    
-    return None
-
-def run_signal_generator(symbol, risk_factor=1.4, interval=60):
+def run_signal_generator(symbol, risk_factor=1.4, interval=300):
     while True:
         # Get the latest data
         data = load_latest_data(symbol)
@@ -192,18 +155,30 @@ def run_signal_generator(symbol, risk_factor=1.4, interval=60):
         trades, pnl = backtest_signals(data, signals, risk_factor=risk_factor)
         
         # Get the latest trade signal
-        latest_signal = get_latest_signal(data, signals, risk_factor=risk_factor)
-        
-        # Output new signal if available
-        if latest_signal:
+        if trades:
+            latest_trade = trades[-1]
+            latest_signal = {
+                'action': latest_trade['action'],
+                'timestamp': data.index[latest_trade['index']],
+                'price': latest_trade['price'],
+                'take_profit': latest_trade['take_profit'],
+                'stop_loss': latest_trade['stop_loss']
+            }
+            
             print(f"Signal: {latest_signal['action']} {symbol} at {latest_signal['timestamp']}")
             print(f"Price: {latest_signal['price']:.2f}")
             print(f"Take Profit: {latest_signal['take_profit']:.2f}")
             print(f"Stop Loss: {latest_signal['stop_loss']:.2f}")
-            print(f"PnL so far: %{pnl:.2f}")
+            print(f"PnL so far: {pnl:.2f}%")
             print("---")
         else:
             print(f"No new signal at {datetime.now()}")
+        
+        # Print backtest summary
+        print(f"Backtest Summary:")
+        print(f"Total trades: {len(trades)}")
+        print(f"PnL: {pnl:.2f}%")
+        print("---")
         
         # Wait for the next interval
         time.sleep(interval)

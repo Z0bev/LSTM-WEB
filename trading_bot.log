@@ -36,3 +36,7 @@
 2024-09-13 21:59:41 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/clock HTTP/1.1" 200 148
 2024-09-13 21:59:41 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/clock HTTP/1.1" 200 148
 2024-09-13 21:59:41 - INFO - Market is closed. Waiting for 3870.32 minutes until market opens.
+2024-09-15 17:17:27 - DEBUG - Starting new HTTPS connection (1): paper-api.alpaca.markets:443
+2024-09-15 17:17:28 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/clock HTTP/1.1" 200 148
+2024-09-15 17:17:28 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/clock HTTP/1.1" 200 148
+2024-09-15 17:17:28 - INFO - Market is closed. Waiting for 1272.56 minutes until market opens.
