@@ -12,9 +12,11 @@ import os
 import time
 import logging
 import pytz
+from requests.exceptions import RequestException
+from urllib3.exceptions import ProtocolError
 
-APCA_API_KEY_ID=('PK1PZCMM0UIDU332OQ6D')
-APCA_API_SECRET_KEY=('0MYLdeaYEiy8CFfuFNHmfQ8cPauQiMzXmvbzz9mc')
+APCA_API_KEY_ID=('PK1T8O18Z5LV5WHVKEEQ')
+APCA_API_SECRET_KEY=('hnpgCfBhfg0w0HU8ewskGapOWOEfuckZpCEuEgM8')
 BASE_URL='https://paper-api.alpaca.markets'
 api = tradeapi.REST(APCA_API_KEY_ID, APCA_API_SECRET_KEY, BASE_URL, api_version='v2')
 
@@ -24,30 +26,54 @@ start_date = end_date - timedelta(days=30)
 # Load trained LSTM model
 model = load_model(r'trained_models\trained_model.h17')
 
-def load_data(symbol, start_date, end_date):
+def retry_api_call(func, max_retries=5, initial_delay=1):
+    retries = 0
+    while retries < max_retries:
+        try:
+            return func()
+        except (RequestException, ProtocolError) as e:
+            wait = initial_delay * (2 ** retries)
+            logging.warning(f"API call failed: {e}. Retrying in {wait} seconds...")
+            time.sleep(wait)
+            retries += 1
     
-        # Format dates to 'YYYY-MM-DD'
-        start_date_str = start_date.strftime('%Y-%m-%d')
-        end_date_str = end_date.strftime('%Y-%m-%d')
-        
+    logging.error(f"API call failed after {max_retries} retries.")
+    raise Exception("Max retries reached")
+
+def load_data(symbol, start_date, end_date):
+    def fetch_data():
         bars = api.get_bars(
             symbol,
-            tradeapi.TimeFrame.Minute,
-            start=start_date_str,
-            end=end_date_str
+            tradeapi.TimeFrame.Hour,
+            start=start_date.strftime('%Y-%m-%d'),
+            end=end_date.strftime('%Y-%m-%d')
         ).df
         df = bars[['open', 'high', 'low', 'close', 'volume']]
         df.columns = ['Open', 'High', 'Low', 'Close', 'Volume']
         df['Adj Close'] = df['Close']
         return df
 
+    try:
+        data = retry_api_call(fetch_data)
+        if data.empty:
+            raise ValueError("Received empty dataset from Alpaca")
+        logging.info("Data fetched successfully from Alpaca API")
+        return data
+    except Exception as e:
+        logging.error(f"Failed to fetch data from Alpaca API: {e}")
+        # Fallback to yfinance
+        logging.info("Falling back to yfinance for data")
+        data = yf.download(symbol, start=start_date, end=end_date, interval='1h')
+        if data.empty:
+            raise ValueError("Received empty dataset from yfinance")
+        logging.info("Data fetched successfully from yfinance")
+        return data
+
 def calculate_indicators(data):
-    
     data['RSI'] = ta.momentum.RSIIndicator(data['Close'], window=14).rsi()
     data['MA'] = ta.trend.SMAIndicator(data['Close'], window=20).sma_indicator()
     data['EMA'] = ta.trend.EMAIndicator(data['Close'], window=20).ema_indicator()
     data['MACD'] = ta.trend.MACD(data['Close']).macd()
-    data['ADX'] = ta.trend.ADXIndicator(data['High'], data['Low'], data['Close']).adx()
     bb = ta.volatility.BollingerBands(data['Close'], window=20, window_dev=2)
     data.loc[:, 'BB_upper'] = bb.bollinger_hband()
     data.loc[:, 'BB_middle'] = bb.bollinger_mavg()
@@ -112,7 +138,7 @@ def should_sell(current_price, rsi, bb_sell_threshold, rsi_sell_threshold, signa
     
     return score / total_weight >= 0.9
 
-def get_trade_signals(data, signals, num_timesteps=10, take_profit_pct=0.05, stop_loss_pct=0.1, risk_factor=1):
+def get_trade_signals(data, signals, num_timesteps=10, take_profit_pct=0.005, stop_loss_pct=0.1, risk_factor=1):
     trades = []
     for i in range(num_timesteps, len(signals) + num_timesteps):
         current_price = data['Close'].iloc[i]
@@ -158,8 +184,37 @@ def get_position(symbol):
         else:
             raise
 
+# def place_bracket_order(symbol, qty, side, limit_price, stop_loss_price, take_profit_price):
+#     try:
+
+#         if side not in ['buy', 'sell']:
+#             logging.error("Bracket orders must be entry orders (buy or sell)")
+#             return None
+        
+#         order = api.submit_order(
+#             symbol=symbol,
+#             qty=qty,
+#             side=side,
+#             type='limit',
+#             time_in_force='gtc',
+#             limit_price=limit_price,
+#             order_class='bracket',
+#             stop_loss={'stop_price': stop_loss_price},
+#             take_profit={'limit_price': take_profit_price}
+#         )
+#         logging.info(f"Bracket order placed: {order}")
+#         return order
+#     except tradeapi.rest.APIError as e:
+#         logging.error(f"Error placing order: {str(e)}")
+#         return None
+
 def place_trade(action, symbol, units, take_profit, stop_loss):
     try:
+        # Validate take profit limit price
+        if take_profit < stop_loss + 0.01:
+            logging.error("take_profit.limit_price must be >= base_price + 0.01")
+            return None
+        
         if action == 'buy':
             order = api.submit_order(
                 symbol=symbol,
@@ -183,22 +238,39 @@ def place_trade(action, symbol, units, take_profit, stop_loss):
                 stop_loss={'stop_price': stop_loss}
             )
         print(f"Placed {action} order for {units} shares of {symbol} with take profit at {take_profit} and stop loss at {stop_loss}")
+        logging.info(f"Trade placed: {order}")
         return order
     except tradeapi.rest.APIError as e:
         print(f"Error placing order: {e}")
+        logging.error(f"Error placing order: {str(e)}")
         return None
 
-def close_position(symbol):
+def close_position(symbol, qty):
     try:
-        api.close_position(symbol)
-        print(f"Closed position for {symbol}")
+        position = api.get_position(symbol)
+        available_qty = int(position.qty)
+        
+        if qty > available_qty:
+            logging.error(f"Insufficient qty available for order (requested: {qty}, available: {available_qty})")
+            return None
+        
+        order = api.submit_order(
+            symbol=symbol,
+            qty=qty,
+            side='sell',
+            type='market',
+            time_in_force='gtc'
+        )
+        logging.info(f"Position closed: {order}")
+        return order
     except tradeapi.rest.APIError as e:
-        print(f"Error closing position: {e}")
+        logging.error(f"Error closing position {position}: {str(e)}")
+        return None
 
 def get_account():
     return api.get_account()
 
-def exec_trades(trades, data, symbol, initial_balance=10000, investment_fraction=0.1):
+def exec_trades(trades, data, symbol, initial_balance=100000, investment_fraction=0.1):
     account = get_account()
     balance = float(account.cash)
     trade_history = []
@@ -215,10 +287,10 @@ def exec_trades(trades, data, symbol, initial_balance=10000, investment_fraction
         if action == 'buy' and (current_position is None or current_position['side'] == 'short'):
             # Close any existing short position
             if current_position and current_position['side'] == 'short':
-                close_position(symbol)
+                close_position(symbol, current_position['qty'])
                 pnl = (current_position['avg_entry_price'] - price) * current_position['qty']
                 trade_history.append({'action': 'buy_to_cover', 'price': price, 'units': current_position['qty'], 'pnl': pnl})
-            
+                
             # Open a long position
             amount_to_invest = balance * investment_fraction
             units = int(amount_to_invest // price)
@@ -226,11 +298,12 @@ def exec_trades(trades, data, symbol, initial_balance=10000, investment_fraction
             if order:
                 print(f"Bought {units} units at ${price:.2f} (Signal Index: {index})")
                 trade_history.append({'action': 'buy', 'price': price, 'units': units})
+            
 
         elif action == 'sell' and (current_position is None or current_position['side'] == 'long'):
             # Close any existing long position
             if current_position and current_position['side'] == 'long':
-                close_position(symbol)
+                close_position(symbol, current_position['qty'])
                 pnl = (price - current_position['avg_entry_price']) * current_position['qty']
                 trade_history.append({'action': 'sell', 'price': price, 'units': current_position['qty'], 'pnl': pnl})
             
@@ -249,7 +322,7 @@ def exec_trades(trades, data, symbol, initial_balance=10000, investment_fraction
     # Close any remaining positions at the end
     final_position = get_position(symbol)
     if final_position:
-        close_position(symbol)
+        close_position(symbol, final_position['qty'])
         final_price = data['Close'].iloc[-1]
         if final_position['side'] == 'long':
             pnl = (final_price - final_position['avg_entry_price']) * final_position['qty']
@@ -289,9 +362,21 @@ def run_trading_loop(symbol, risk_factor, investment_fraction=0.1):
             # Get recent trading data
             data = get_trading_data(symbol)
             
+            if data.empty:
+                logging.warning("Received empty dataset. Retrying in 5 minutes...")
+                time.sleep(300)
+                continue
+            
             # Calculate indicators and generate signals
             data = calculate_indicators(data)
-            scaled_data, scaler = preprocess_data(data)
+            
+            try:
+                scaled_data, scaler = preprocess_data(data)
+            except ValueError as e:
+                logging.error(f"Preprocessing error: {str(e)}")
+                time.sleep(300)
+                continue
+            
             X = create_lstm_input(scaled_data)
             signals = generate_signals(model, X)
             
@@ -303,17 +388,14 @@ def run_trading_loop(symbol, risk_factor, investment_fraction=0.1):
             
             # Log results
             logging.info(f"Current Balance: ${balance:.2f}, PnL%: {pnl_percent:.2f}%")
-            for trade in trade_history:
-                logging.info(f"Trade: {trade['action']} at ${trade['price']:.2f}, Units: {trade['units']}")
-                if 'pnl' in trade:
-                    logging.info(f"PnL: ${trade['pnl']:.2f}")
             
             # Wait for a short period before next iteration
             time.sleep(60)  
 
         except Exception as e:
-            logging.error(f"An error occurred: {str(e)}")
-            time.sleep(300)  
+            logging.error(f"An error occurred in the main loop: {str(e)}")
+            logging.error("Traceback:", exc_info=True)
+            time.sleep(300)
 
 logging.basicConfig(
     filename='trading_bot.log',  
@@ -325,7 +407,7 @@ logging.basicConfig(
 def main():
     symbol = 'SPY'
     risk_factor = 1.4
-    print("Starting Trading bot...")
+    print("Starting Trading bot, check logs")
     run_trading_loop(symbol, risk_factor)
 
 if __name__ == "__main__":
