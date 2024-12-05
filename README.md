@@ -13,10 +13,7 @@ An automated trading bot using LSTM neural networks to predict market movements 
 - python-dotenv
 
 # Setup
-
-1. Install dependencies:
-```bash
-pip install pandas numpy tensorflow alpaca-trade-api scikit-learn ta yfinance python-dotenv
+-pip install pandas numpy tensorflow alpaca-trade-api scikit-learn ta yfinance python-dotenv
 
 Create .env file in root directory:
 APCA_API_KEY_ID=your_api_key
