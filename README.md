@@ -12,7 +12,7 @@ An automated trading bot using LSTM neural networks to predict market movements 
 - yfinance
 - python-dotenv
 
-#Setup
+# Setup
 
 1. Install dependencies:
 ```bash
@@ -23,7 +23,8 @@ APCA_API_KEY_ID=your_api_key
 APCA_API_SECRET_KEY=your_secret_key
 APCA_BASE_URL=https://paper-api.alpaca.markets
 
-Features
+
+# Features
 LSTM-based price prediction
 Technical indicator integration
 Automated trade execution
@@ -31,9 +32,8 @@ Position management
 Risk management
 Real-time market data
 Paper trading support
-Trading Strategy
-The bot uses:
 
+# The bot uses:
 LSTM predictions
 RSI
 Moving Averages
