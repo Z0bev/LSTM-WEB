@@ -14,10 +14,38 @@ import logging
 import pytz
 from requests.exceptions import RequestException
 from urllib3.exceptions import ProtocolError
+import os
+from dotenv import load_dotenv
 
-APCA_API_KEY_ID=('PK1T8O18Z5LV5WHVKEEQ')
-APCA_API_SECRET_KEY=('hnpgCfBhfg0w0HU8ewskGapOWOEfuckZpCEuEgM8')
-BASE_URL='https://paper-api.alpaca.markets'
+
+# Setup logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# Get absolute path to .env file
+env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.env'))
+logger.debug(f"Looking for .env file at: {env_path}")
+
+if not os.path.exists(env_path):
+    raise FileNotFoundError(f".env file not found at {env_path}")
+
+# Read with explicit UTF-8 encoding
+with open(env_path, 'r', encoding='utf-8-sig') as f:
+    env_contents = f.read()
+    logger.debug(f"Raw .env contents:\n{env_contents}")
+
+load_dotenv(dotenv_path=env_path, encoding='utf-8-sig')
+
+APCA_API_KEY_ID = os.getenv('APCA_API_KEY_ID')
+APCA_API_SECRET_KEY = os.getenv('APCA_API_SECRET_KEY') 
+BASE_URL = os.getenv('APCA_BASE_URL')
+
+logger.debug(f"Loaded API Key: {APCA_API_KEY_ID}")
+logger.debug(f"Loaded Base URL: {BASE_URL}")
+
+if not all([APCA_API_KEY_ID, APCA_API_SECRET_KEY, BASE_URL]):
+    raise ValueError("Environment variables not loaded correctly")
+
 api = tradeapi.REST(APCA_API_KEY_ID, APCA_API_SECRET_KEY, BASE_URL, api_version='v2')
 
 end_date = datetime.now()

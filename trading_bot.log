@@ -21159,3 +21159,112 @@ alpaca_trade_api.rest.APIError: forbidden.
 2024-10-15 19:05:30 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
 2024-10-15 19:05:30 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
 2024-10-15 19:05:30 - INFO - Current Balance: $100000.00, PnL%: 0.00%
+2024-11-11 17:59:13 - DEBUG - Starting new HTTPS connection (1): paper-api.alpaca.markets:443
+2024-11-11 17:59:13 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/clock HTTP/1.1" 200 147
+2024-11-11 17:59:13 - DEBUG - Starting new HTTPS connection (1): data.alpaca.markets:443
+2024-11-11 17:59:13 - DEBUG - https://data.alpaca.markets:443 "GET /v2/stocks/SPY/bars?timeframe=1Hour&adjustment=raw&start=2024-10-12&end=2024-11-11 HTTP/1.1" 403 68
+2024-11-11 17:59:13 - ERROR - Failed to fetch data from Alpaca API: subscription does not permit querying recent SIP data
+2024-11-11 17:59:13 - INFO - Falling back to yfinance for data
+2024-11-11 17:59:13 - DEBUG - Starting new HTTPS connection (1): query2.finance.yahoo.com:443
+2024-11-11 17:59:14 - DEBUG - https://query2.finance.yahoo.com:443 "GET /v8/finance/chart/SPY?period1=1728755953&period2=1731347953&interval=1h&includePrePost=False&events=div%2Csplits%2CcapitalGains HTTP/1.1" 200 None
+2024-11-11 17:59:14 - INFO - Data fetched successfully from yfinance
+2024-11-11 17:59:14 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:14 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:14 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:14 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:15 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:15 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:15 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:15 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:15 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:15 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:15 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:15 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:15 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:15 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:15 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:15 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:15 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:15 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:15 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:15 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:15 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:16 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:16 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:16 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:16 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:16 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:16 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:16 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:16 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:16 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:16 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:16 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:16 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:16 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:16 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:16 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:16 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:17 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:17 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:17 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:17 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:17 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:17 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:17 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:17 - DEBUG - https://paper-api.alpaca.markets:443 "POST /v2/orders HTTP/1.1" 422 109
+2024-11-11 17:59:17 - ERROR - Error placing order: take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:17 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:17 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:17 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:17 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:17 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:17 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:17 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:18 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:18 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:18 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:18 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:18 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:18 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:18 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:18 - DEBUG - https://paper-api.alpaca.markets:443 "POST /v2/orders HTTP/1.1" 422 109
+2024-11-11 17:59:18 - ERROR - Error placing order: take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:18 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:18 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:18 - DEBUG - https://paper-api.alpaca.markets:443 "POST /v2/orders HTTP/1.1" 422 109
+2024-11-11 17:59:18 - ERROR - Error placing order: take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:18 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:18 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:19 - DEBUG - https://paper-api.alpaca.markets:443 "POST /v2/orders HTTP/1.1" 422 109
+2024-11-11 17:59:19 - ERROR - Error placing order: take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:19 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:19 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:19 - DEBUG - https://paper-api.alpaca.markets:443 "POST /v2/orders HTTP/1.1" 422 109
+2024-11-11 17:59:19 - ERROR - Error placing order: take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:19 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:19 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:19 - DEBUG - https://paper-api.alpaca.markets:443 "POST /v2/orders HTTP/1.1" 422 109
+2024-11-11 17:59:19 - ERROR - Error placing order: take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:19 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:19 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:19 - DEBUG - https://paper-api.alpaca.markets:443 "POST /v2/orders HTTP/1.1" 422 109
+2024-11-11 17:59:19 - ERROR - Error placing order: take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:19 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:19 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:20 - DEBUG - https://paper-api.alpaca.markets:443 "POST /v2/orders HTTP/1.1" 422 109
+2024-11-11 17:59:20 - ERROR - Error placing order: take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:20 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:20 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:20 - DEBUG - https://paper-api.alpaca.markets:443 "POST /v2/orders HTTP/1.1" 422 109
+2024-11-11 17:59:20 - ERROR - Error placing order: take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:20 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:20 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:20 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:20 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:20 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:20 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:20 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
+2024-11-11 17:59:20 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/positions/SPY HTTP/1.1" 404 53
+2024-11-11 17:59:20 - ERROR - take_profit.limit_price must be >= base_price + 0.01
+2024-11-11 17:59:20 - DEBUG - https://paper-api.alpaca.markets:443 "GET /v2/account HTTP/1.1" 200 None
