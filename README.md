@@ -1,5 +1,6 @@
 # LSTM-WEB
 An automated trading bot using LSTM neural networks to predict market movements and execute trades via Alpaca API.
+(Still needs a lot of work)
 
 # Dependencies
 - Python 3.11+
